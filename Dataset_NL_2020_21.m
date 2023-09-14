@@ -177,3 +177,6 @@ grid on
 legend('Child', 'Teen', 'Adults', 'Midlife', 'Senior', 'Elderly', 'Senoctogenarian', 'Unknown' )
 xlim([tt_avg.date(1), tt_avg.date(end)])
 
+
+
+disp(100)
