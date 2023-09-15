@@ -580,17 +580,17 @@ customColors = {[0,	0.447,	0.741],
                 [0.466,	0.674,	0.188],
                 [0.301,	0.745,	0.933],
                 [0.635,	0.078,	0.184],
-                'r',            
-                'g',              
-                'b',               
-                [0.8, 0.2, 0.4],   
-                [0.1, 0.7, 0.2],   
-                [0.9, 0.5, 0.1],   
+                [0 0 1],            
+                [1 0 0],              
+                [1 1 0], 
+                [0.1 0.1 0.1],
+                [0 1 0],    
+                [1 0 1],
+                [0 1 1],
                 [0.7, 0.3, 0.5],  
                 [0.3, 0.6, 0.9],   
-                [0.4, 0.8, 0.2],   
-                [0.6, 0.2, 0.7],    
-                [0.8, 0.7, 0.1]};
+                [0.4, 0.8, 0.2],     
+                [0.7, 0.7, 0.7]};
 
 figure()
 for ii = 2:19
@@ -615,7 +615,7 @@ date_barplot = dataset_variants{:,20};
 figure()
 h = bar(date_barplot,data_barplot, 3, "stacked");
 for ii = 1:size(customColors, 1)
-    h(ii).FaceColor = [customColors{ii,1}];
+    h(1, ii).FaceColor = [customColors{ii,1}];
 end
 
 ylabel('$\%$ Variant','Interpreter','latex')
@@ -623,4 +623,5 @@ title('\textbf{SARS-CoV-2 Variants in The Netherlands - Trend per Week}','Interp
 legend('SARS-CoV-2', 'B.1.1.7 - ALPHA VARIANT', 'B.1.351', 'P.1', 'B.1.617.2 - DELTA VARIANT', 'BA.1 - OMICRON BA1 VARIANT', 'BA.2 - OMICRON BA2 VARIANT', 'BA.2.12.1','BA.4','BA.5 - OMICRON BA5 VARIANT','BQ.1 - OMICRON BQ1 VARIANT','BA.2.75','XBB','XBB.1.5 OMICRON XBB VARIANT','XBB.1.9','XBF','XBB.1.16','EG.5','Interpreter','latex','Location','northeastoutside')
 xlim([dataset_variants.newdate(1), dataset_variants.newdate(end)])
 ylim([0,100.1])
+set(gca, 'TickLabelInterpreter', 'Latex')
 
