@@ -70,7 +70,7 @@ plot(pt_avg.date, pt_avg.csum, 'LineWidth',1.5)
 ylabel('$\char"0023$ of cases', 'Interpreter', 'latex')
 title('\textbf{Cumulate Total tests vs Cumulate Positive tests per week}','Interpreter', 'latex')
 grid on
-legend('Total', 'Positive','Interpreter', 'latex')
+legend('Total', 'Positive','Interpreter', 'latex','Location','northwest')
 xlim([tt_avg.date(1), tt_avg.date(end)])
 set(gca, 'TickLabelInterpreter', 'Latex')
 
@@ -95,6 +95,12 @@ legend('Total', 'Positive','Interpreter', 'latex')
 xlim([tt_avg.date(1), tt_avg.date(end)])
 set(gca, 'TickLabelInterpreter', 'Latex')
 
+% Save only useful data
+cleandata.testing.total.date = tt_avg.date;
+cleandata.testing.total.data = tt_avg.data_norm;
+
+cleandata.testing.positive.date = pt_avg.date;
+cleandata.testing.positive.data = pt_avg.data_norm;
 
 figure()
 plot(tt_avg.date, tt_avg.csum_norm, 'LineWidth',1.5)
@@ -103,9 +109,10 @@ plot(pt_avg.date, pt_avg.csum_norm, 'LineWidth',1.5)
 ylabel('$\%$ of cases over Population', 'Interpreter', 'latex')
 title('\textbf{Cumulate $\%$ Tests vs Cumulate $\%$ Positive tests per week}','Interpreter', 'latex')
 grid on
-legend('Total', 'Positive','Interpreter', 'latex')
+legend('Total', 'Positive','Interpreter', 'latex','Location','northwest')
 xlim([tt_avg.date(1), tt_avg.date(end)])
 set(gca, 'TickLabelInterpreter', 'Latex')
+
 
 
 %% ICU ADMISSIONS
@@ -156,6 +163,24 @@ sengen_summed.t2.csum = cumsum(elderly_summed.t2.sum_IC_admission,1);
 unkwn_summed.t1.csum = cumsum(elderly_summed.t1.sum_Hospital_admission,1);
 unkwn_summed.t2.csum = cumsum(elderly_summed.t2.sum_IC_admission,1);
 
+% For the sake of the fitting operations all data differentiated by age
+% group will be summed to have a normalization over the whole population
+
+ICUs_Total = child_summed.t2.sum_IC_admission + teen_summed.t2.sum_IC_admission + adults_summed.t2.sum_IC_admission + ...
+             midlife_summed.t2.sum_IC_admission + senior_summed.t2.sum_IC_admission + elderly_summed.t2.sum_IC_admission + ...
+             sengen_summed.t2.sum_IC_admission + unkwn_summed.t2.sum_IC_admission;
+Hosp_Total = child_summed.t1.sum_Hospital_admission + teen_summed.t1.sum_Hospital_admission + adults_summed.t1.sum_Hospital_admission + ...
+             midlife_summed.t1.sum_Hospital_admission + senior_summed.t1.sum_Hospital_admission + elderly_summed.t1.sum_Hospital_admission + ...
+             sengen_summed.t1.sum_Hospital_admission + unkwn_summed.t1.sum_Hospital_admission;
+ICUs_Total = ICUs_Total/Npop; % Normalization over population
+Hosp_Total = Hosp_Total/Npop;
+
+%saving of the data in 'cleandata' struct
+cleandata.IC_Hos.ICUs.date = child_summed.t1.Date_of_statistics_week_start;
+cleandata.IC_Hos.ICUs.data = ICUs_Total;
+cleandata.IC_Hos.Hosp.date = child_summed.t1.Date_of_statistics_week_start;
+cleandata.IC_Hos.Hosp.data = Hosp_Total;
+
 % Not normalized data figures - Trend plot 
 figure()
 plot(child_summed.t1.Date_of_statistics_week_start, child_summed.t1.sum_Hospital_admission, 'LineWidth',1.5)
@@ -203,6 +228,8 @@ grid on
 legend('Child', 'Teen', 'Adult', 'Midlife', 'Senior', 'Elderly', 'Senoctogenarian', 'Unknown','Interpreter', 'latex')
 set(gca, 'TickLabelInterpreter', 'Latex')
 xlim([tt_avg.date(1), tt_avg.date(end)])
+
+
 
 % Not normalized data figures - Cumulated plot 
 
@@ -330,7 +357,7 @@ plot(heal_avg.date, heal_avg.csum, 'LineWidth',1.5)
 ylabel('$\char"0023$ of cases','Interpreter','latex')
 title('\textbf{Cumulate Total Healed per week}','Interpreter','latex')
 grid on
-legend('Healed Cases','Interpreter','latex')
+legend('Healed Cases','Interpreter','latex','Location','southeast')
 xlim([tt_avg.date(1), tt_avg.date(end)])
 set(gca, 'TickLabelInterpreter', 'Latex')
 
@@ -371,6 +398,14 @@ grid on
 legend('Healed','Interpreter','latex')
 xlim([tt_avg.date(1), tt_avg.date(end)])
 set(gca, 'TickLabelInterpreter', 'Latex')
+
+% Saving of the normalized data in 'cleandata' struct
+cleandata.Reported.Pos.date = rep_avg.date;
+cleandata.Reported.Pos.data = rep_avg.data_norm;
+cleandata.Reported.Dec.date = dec_avg.date;
+cleandata.Reported.Dec.data = dec_avg.data_norm;
+cleandata.Reported.Heal.date = heal_avg.date;
+cleandata.Reported.Heal.data = heal_avg.data_norm;
 
 figure()
 plot(rep_avg.date, rep_avg.csum_norm, 'LineWidth',1.5)
@@ -625,3 +660,7 @@ xlim([dataset_variants.newdate(1), dataset_variants.newdate(end)])
 ylim([0,100.1])
 set(gca, 'TickLabelInterpreter', 'Latex')
 
+%% Saving of Meaningful data
+
+filename = 'cleandata.mat';
+save(filename, '-struct', 'cleandata');

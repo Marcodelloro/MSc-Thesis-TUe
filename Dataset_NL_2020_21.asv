@@ -70,7 +70,7 @@ plot(pt_avg.date, pt_avg.csum, 'LineWidth',1.5)
 ylabel('$\char"0023$ of cases', 'Interpreter', 'latex')
 title('\textbf{Cumulate Total tests vs Cumulate Positive tests per week}','Interpreter', 'latex')
 grid on
-legend('Total', 'Positive','Interpreter', 'latex')
+legend('Total', 'Positive','Interpreter', 'latex','Location','northwest')
 xlim([tt_avg.date(1), tt_avg.date(end)])
 set(gca, 'TickLabelInterpreter', 'Latex')
 
@@ -95,6 +95,12 @@ legend('Total', 'Positive','Interpreter', 'latex')
 xlim([tt_avg.date(1), tt_avg.date(end)])
 set(gca, 'TickLabelInterpreter', 'Latex')
 
+% Save only useful data
+cleandata.testing.total.date = tt_avg.date;
+cleandata.testing.total.data = tt_avg.data_norm;
+
+cleandata.testing.positive.date = pt_avg.date;
+cleandata.testing.positive.data = pt_avg.data_norm;
 
 figure()
 plot(tt_avg.date, tt_avg.csum_norm, 'LineWidth',1.5)
@@ -103,9 +109,10 @@ plot(pt_avg.date, pt_avg.csum_norm, 'LineWidth',1.5)
 ylabel('$\%$ of cases over Population', 'Interpreter', 'latex')
 title('\textbf{Cumulate $\%$ Tests vs Cumulate $\%$ Positive tests per week}','Interpreter', 'latex')
 grid on
-legend('Total', 'Positive','Interpreter', 'latex')
+legend('Total', 'Positive','Interpreter', 'latex','Location','northwest')
 xlim([tt_avg.date(1), tt_avg.date(end)])
 set(gca, 'TickLabelInterpreter', 'Latex')
+
 
 
 %% ICU ADMISSIONS
@@ -156,6 +163,24 @@ sengen_summed.t2.csum = cumsum(elderly_summed.t2.sum_IC_admission,1);
 unkwn_summed.t1.csum = cumsum(elderly_summed.t1.sum_Hospital_admission,1);
 unkwn_summed.t2.csum = cumsum(elderly_summed.t2.sum_IC_admission,1);
 
+% For the sake of the fitting operations all data differentiated by age
+% group will be summed to have a normalization over the whole population
+
+ICUs_Total = child_summed.t2.sum_IC_admission + teen_summed.t2.sum_IC_admission + adults_summed.t2.sum_IC_admission + ...
+             midlife_summed.t2.sum_IC_admission + senior_summed.t2.sum_IC_admission + elderly_summed.t2.sum_IC_admission + ...
+             sengen_summed.t2.sum_IC_admission + unkwn_summed.t2.sum_IC_admission;
+Hosp_Total = child_summed.t1.sum_Hospital_admission + teen_summed.t1.sum_Hospital_admission + adults_summed.t1.sum_Hospital_admission + ...
+             midlife_summed.t1.sum_Hospital_admission + senior_summed.t1.sum_Hospital_admission + elderly_summed.t1.sum_Hospital_admission + ...
+             sengen_summed.t1.sum_Hospital_admission + unkwn_summed.t1.sum_Hospital_admission;
+ICUs_Total = ICUs_Total/Npop; % Normalization over population
+Hosp_Total = Hosp_Total/Npop;
+
+%saving of the data in 'cleandata' struct
+cleandata.IC_Hos.ICUs.date = child_summed.t1.Date_of_statistics_week_start;
+cleandata.IC_Hos.ICUs.data = ICUs_Total;
+cleandata.IC_Hos.Hosp.date = child_summed.t1.Date_of_statistics_week_start;
+cleandata.IC_Hos.Hosp.data = Hosp_Total;
+
 % Not normalized data figures - Trend plot 
 figure()
 plot(child_summed.t1.Date_of_statistics_week_start, child_summed.t1.sum_Hospital_admission, 'LineWidth',1.5)
@@ -203,6 +228,8 @@ grid on
 legend('Child', 'Teen', 'Adult', 'Midlife', 'Senior', 'Elderly', 'Senoctogenarian', 'Unknown','Interpreter', 'latex')
 set(gca, 'TickLabelInterpreter', 'Latex')
 xlim([tt_avg.date(1), tt_avg.date(end)])
+
+
 
 % Not normalized data figures - Cumulated plot 
 
@@ -330,7 +357,7 @@ plot(heal_avg.date, heal_avg.csum, 'LineWidth',1.5)
 ylabel('$\char"0023$ of cases','Interpreter','latex')
 title('\textbf{Cumulate Total Healed per week}','Interpreter','latex')
 grid on
-legend('Healed Cases','Interpreter','latex')
+legend('Healed Cases','Interpreter','latex','Location','southeast')
 xlim([tt_avg.date(1), tt_avg.date(end)])
 set(gca, 'TickLabelInterpreter', 'Latex')
 
@@ -371,6 +398,13 @@ grid on
 legend('Healed','Interpreter','latex')
 xlim([tt_avg.date(1), tt_avg.date(end)])
 set(gca, 'TickLabelInterpreter', 'Latex')
+
+% Saving of the normalized data in 'cleandata' struct
+cleandata.Reported.Pos.date = child_summed.t1.Date_of_statistics_week_start;
+cleandata.Reported.Pos.date = child_summed.t1.Date_of_statistics_week_start;
+cleandata.Reported.Dec.data = ICUs_Total;
+cleandata.Reported.Heal.date = child_summed.t1.Date_of_statistics_week_start;
+
 
 figure()
 plot(rep_avg.date, rep_avg.csum_norm, 'LineWidth',1.5)
@@ -580,17 +614,17 @@ customColors = {[0,	0.447,	0.741],
                 [0.466,	0.674,	0.188],
                 [0.301,	0.745,	0.933],
                 [0.635,	0.078,	0.184],
-                'r',            
-                'g',              
-                'b',               
-                [0.8, 0.2, 0.4],   
-                [0.1, 0.7, 0.2],   
-                [0.9, 0.5, 0.1],   
+                [0 0 1],            
+                [1 0 0],              
+                [1 1 0], 
+                [0.1 0.1 0.1],
+                [0 1 0],    
+                [1 0 1],
+                [0 1 1],
                 [0.7, 0.3, 0.5],  
                 [0.3, 0.6, 0.9],   
-                [0.4, 0.8, 0.2],   
-                [0.6, 0.2, 0.7],    
-                [0.8, 0.7, 0.1]};
+                [0.4, 0.8, 0.2],     
+                [0.7, 0.7, 0.7]};
 
 figure()
 for ii = 2:19
@@ -603,6 +637,7 @@ title('\textbf{SARS-CoV-2 Variants in The Netherlands}','Interpreter','latex')
 legend('SARS-CoV-2', 'B.1.1.7 - ALPHA VARIANT', 'B.1.351', 'P.1', 'B.1.617.2 - DELTA VARIANT', 'BA.1 - OMICRON BA1 VARIANT', 'BA.2 - OMICRON BA2 VARIANT', 'BA.2.12.1','BA.4','BA.5 - OMICRON BA5 VARIANT','BQ.1 - OMICRON BQ1 VARIANT	','BA.2.75','XBB','XBB.1.5 OMICRON XBB VARIANT','XBB.1.9',  'XBF','XBB.1.16','EG.5','Interpreter','latex','Location','northeastoutside')
 xlim([dataset_variants.newdate(1), dataset_variants.newdate(end)])
 set(gca, 'TickLabelInterpreter', 'Latex')
+ylabel('$\%$ Variant','Interpreter','latex')
 
 
 % modifiy data for the plot
@@ -614,11 +649,13 @@ date_barplot = dataset_variants{:,20};
 figure()
 h = bar(date_barplot,data_barplot, 3, "stacked");
 for ii = 1:size(customColors, 1)
-    h(ii).FaceColor = [customColors{ii,1}];
+    h(1, ii).FaceColor = [customColors{ii,1}];
 end
 
-ylabel('$\%$ Variant')
+ylabel('$\%$ Variant','Interpreter','latex')
 title('\textbf{SARS-CoV-2 Variants in The Netherlands - Trend per Week}','Interpreter','latex')
 legend('SARS-CoV-2', 'B.1.1.7 - ALPHA VARIANT', 'B.1.351', 'P.1', 'B.1.617.2 - DELTA VARIANT', 'BA.1 - OMICRON BA1 VARIANT', 'BA.2 - OMICRON BA2 VARIANT', 'BA.2.12.1','BA.4','BA.5 - OMICRON BA5 VARIANT','BQ.1 - OMICRON BQ1 VARIANT','BA.2.75','XBB','XBB.1.5 OMICRON XBB VARIANT','XBB.1.9','XBF','XBB.1.16','EG.5','Interpreter','latex','Location','northeastoutside')
-
+xlim([dataset_variants.newdate(1), dataset_variants.newdate(end)])
+ylim([0,100.1])
+set(gca, 'TickLabelInterpreter', 'Latex')
 
