@@ -689,7 +689,6 @@ customColors2 = {   [1, 0.9, 0.6],
 for ii = 1:size(policy_dates)-1
     area.x(ii, :) = [policy_dates(ii) policy_dates(ii) policy_dates(ii+1) policy_dates(ii+1)];
     area.y(ii, :) = [0 7e-4 7e-4 0];
-    area.y2(ii,:) = [0 7e-6 7e-6 0];
 end
 
 figure()
@@ -712,19 +711,19 @@ set(gca, 'TickLabelInterpreter', 'Latex')
 
 figure()
 for ii = 1:size(policy_dates)-1
-    fill(area.x(ii, :) ,area.y2(1, :), customColors2{ii,1} ,'FaceAlpha',.5,'EdgeColor', 'none','HandleVisibility', 'off')
+    fill(area.x(ii, :) ,area.y(1, :), customColors2{ii,1} ,'FaceAlpha',.5,'EdgeColor', 'none','HandleVisibility', 'off')
     hold on
     xline(policy_dates(ii),":",'HandleVisibility', 'off')
     hold on 
 end
 hold on
-plot(dec_avg.date, dec_avg.data_norm,'k','LineWidth',1.5, 'DisplayName', 'Deceased')
+plot(rep_avg.date, rep_avg.data_norm, 'k','LineWidth',1.5, 'DisplayName', 'Reported Positive')
 ylabel('$\%$ of cases over Population','Interpreter','latex')
-title('\textbf{$\%$ Deceased Cases per week}','Interpreter','latex')
+title('\textbf{$\%$ Reported Positive Cases per week}','Interpreter','latex')
 grid on
 legend('Interpreter','latex')
 xlim([tt_avg.date(1), tt_avg.date(end)])
-ylim([0, 7e-6])
+ylim([0, 7e-4])
 set(gca, 'TickLabelInterpreter', 'Latex')
 
 
