@@ -8,18 +8,23 @@ close all
 % COVID-19 outbrake, taking into account 2021 second wave and intial
 % vaccination of the population of Netherlands as January 2021.
 
+% here are gathered all sorts of data from RIVM, classified and polotted.
+% Only few of them are actually used to fit the whole SIDTTHE (SIMPLIFIED
+% SIDARTHE) model, the rest are to have a complete overview of the problem
+% at the moment
+
 %% Total tests + Positive tested 
 
-data_test = readtable('/Users/marcodelloro/Desktop/Thesis/Codes/2020_21_Covid19_NL.xlsx','Sheet','COVID-19_Testing_Positive');
-data_ICU= readtable('/Users/marcodelloro/Desktop/Thesis/Codes/2020_21_Covid19_NL.xlsx','Sheet','COVID-19_ICUs_age');
+data_test = readtable('/Users/marcodelloro/Desktop/Thesis/Codes/Netherlands_dataset.xlsx','Sheet','COVID-19_Testing_Positive');
+data_ICU= readtable('/Users/marcodelloro/Desktop/Thesis/Codes/Netherlands_dataset.xlsx','Sheet','COVID-19_ICUs_age');
 data_ICU = data_ICU(487:end,:);
-data_ReD = readtable('/Users/marcodelloro/Desktop/Thesis/Codes/2020_21_Covid19_NL.xlsx','Sheet','COVID-19_RepCases_Deaths'); % reported cases and Deceased
+data_ReD = readtable('/Users/marcodelloro/Desktop/Thesis/Codes/Netherlands_dataset.xlsx','Sheet','COVID-19_RepCases_Deaths'); % reported cases and Deceased
 data_ReD = data_ReD(68821:end,:);
-dataset_vax= readtable('/Users/marcodelloro/Desktop/Thesis/Codes/2020_21_Covid19_NL.xlsx','Sheet','COVID-19_vaccination');
-dataset_variants = readtable('/Users/marcodelloro/Desktop/Thesis/Codes/2020_21_Covid19_NL.xlsx','Sheet','Variants','Range','A:S');
+dataset_vax= readtable('/Users/marcodelloro/Desktop/Thesis/Codes/Netherlands_dataset.xlsx','Sheet','COVID-19_vaccination');
+dataset_variants = readtable('/Users/marcodelloro/Desktop/Thesis/Codes/Netherlands_dataset.xlsx','Sheet','Variants','Range','A:S');
 
 % loading of the measures coming from the government
-policy = readtable('/Users/marcodelloro/Desktop/Thesis/Codes/2020_21_Covid19_NL.xlsx','Sheet','GovActions','Range','A25:A37');
+policy = readtable('/Users/marcodelloro/Desktop/Thesis/Codes/Netherlands_dataset.xlsx','Sheet','GovActions','Range','B25:B37');
 policy.DateOfActions = datetime(policy.DateOfActions, 'InputFormat', 'dd MMMM yyyy');
 
 %% Total tests + Positive tested 
@@ -727,8 +732,108 @@ xlim([tt_avg.date(1), tt_avg.date(end)])
 ylim([0, 7e-6])
 set(gca, 'TickLabelInterpreter', 'Latex')
 
+close all
 
-%% Saving of Meaningful data
+%% Estimate of the total number of infected, undetected (Not tested)
 
-filename = 'cleandata.mat';
-save(filename, '-struct', 'cleandata'); 
+% This part of code is based on the paper "Estimating the undetected infections in the Covid-19 outbreak by harnessing capture–recapture methods"
+% by Dankmar Böhning et Al.
+% The Following code purpose is estimate data for "I" (Infected, undetected, asymptomatic, capable of infecting), in the Netherlands.
+% For more info on the capture–recapture (CR) methods, refer to the original article cited above
+
+
+% Initial data needed 
+% Cumulative counts of infections = dec_avg.csum
+% Cumulative counts of deceased = dec_avg.csum
+% delta_N(t) = N(t) - N(t-1) -- New cases per day (t)
+% delta_D(t) = D(t) - D(t-1) -- Deceased per day (t)
+
+% H(t) =  [ delta_N(t) * ( delta_N(t) -1 ) ] / [ 1 + delta_N(t-1) - delta_D(t) ] 
+% H(t) = Hidden cases bias-corrected form by Chao
+
+
+% NOTE: EVEN IF THE PAPER PRODUCES HIS DATA ON DAILY BASIS, I STICK WITH WEEKS, SO DATA CAN BE MORE SMOOTH;
+% MAYBE IN THIS CASE WOULD BE BETETR TO ADD THE HEALED GROUP ASWELL IN THE 'COUNTED TWICE CASES', BUT CAN BE FIXED IN THE FUTURE
+
+delta_N = rep_avg.data; 
+delta_D = dec_avg.data;
+
+H_start = ( delta_N(1) * (delta_N(1) - 1) ) / ( 1 + delta_N(1) - delta_D(1) );
+
+varH_start = ( delta_N(1)^4 ) / ( ( 1 + delta_N(1) - delta_D(1) )^3)  + ...
+               ( 4 * delta_N(1)^3 ) / ( ( 1 + delta_N(1) - delta_D(1) )^2) + ...
+               ( delta_N(1)^2 ) / ( ( 1 + delta_N(1) - delta_D(1) ) );
+
+% Note that also variance for H must be taken into account, so following
+% the paper guidlines, variance estimate proposed by Niwitpong
+
+% varH(t) = ( delta_N(t)^4 ) / ( 1 + delta_N(t-1) - delta_D(t) )^3  + ...
+%           ( 4 * delta_N(t)^3 ) / ( 1 + delta_N(t-1) - delta_D(t) )^2 + ...
+%           ( delta_N(t)^2 ) / ( 1 + delta_N(t-1) - delta_D(t) );
+
+for ii = 2:size(delta_N,1)
+    factor = delta_N(ii-1) - delta_D(ii);
+    disp (ii)
+        if factor < 0
+           factor = 0;
+        end
+    % Hidden cases 
+
+    num_H = delta_N(ii) * (delta_N(ii) - 1);
+    den_H = 1 + factor;
+    H(ii) = num_H/den_H;
+
+    % Hidden cases variance
+
+    varH(ii) = ( delta_N(ii)^4 ) / (den_H^3)  + ...
+               ( 4 * delta_N(ii)^3 ) / (den_H^2) + ...
+               ( delta_N(ii)^2 ) / (den_H);
+
+    H_plus(ii) = H(ii) + 2.576*sqrt(varH(ii)); % 99perc confidence interval
+    H_minus(ii) = H(ii) - 2.576*sqrt(varH(ii));
+
+end
+
+H(1) = H_start;
+varH(1) = varH_start;
+H_plus(1) = H(1) + 2.576*sqrt(varH(1)); % 99perc confidence interval
+H_minus(1) = H(1) - 2.576*sqrt(varH(1)); 
+
+% Plots of the variance and the mean value
+
+var_area.x = [rep_avg.date flip(rep_avg.date)];
+var_area.y = [H_plus flip(H_minus)];
+
+figure()
+fill(var_area.x,var_area.y,[0 0.4470 0.7410],'FaceAlpha',.5,'EdgeColor', 'none','HandleVisibility', 'off')
+hold on
+plot(rep_avg.date, H, LineWidth=1.5, Color=[0 0.4470 0.7410])
+ylabel('$\char"0023$ of cases','Interpreter','latex')
+title('\textbf{Estimated Hidden Cases per day}','Interpreter','latex')
+grid on
+legend('Hidden Cases','Interpreter','latex','Location','northeast')
+xlim([tt_avg.date(1), tt_avg.date(end)])
+set(gca, 'TickLabelInterpreter', 'Latex')
+
+ratio_observed = (H' + rep_avg.data) ./ rep_avg.data ;
+
+figure()
+plot(rep_avg.date, ratio_observed, LineWidth=1.5)
+ylabel('Ratio Total to Observed','Interpreter','latex')
+title('\textbf{Ratio Total to Observed Trend}','Interpreter','latex')
+grid on
+legend('Ratio T/O','Interpreter','latex','Location','southeast')
+xlim([tt_avg.date(1), tt_avg.date(end)])
+set(gca, 'TickLabelInterpreter', 'Latex')
+
+
+%% Estimate of the total number of Healed Population (H)
+
+% According to CSSEGISandData (John Hopkins University Covid-19 World Database) Netherlands
+% does not publish recovered data.
+
+
+%% Gathering of the data foe every compartment
+% 
+% filename = 'cleandata.mat';
+% save(filename, '-struct', 'cleandata'); 

@@ -33,6 +33,7 @@ T = SX.sym('T');
 H = SX.sym('H');
 E = SX.sym('E');
 x =[S; I; D; A; R; T; H; E]; % vectors with all the states
+x0 = [1;0;0;0;0;0;0,O]; % intial condition at time t=0 (perfore the pandemic begins)
 
 alfa = SX.sym('alfa');
 beta = SX.sym('beta');
@@ -54,6 +55,7 @@ parms = [alfa; beta; gamma; delta; epsi; zeta; eta; theta; ...
          mu; nu; rho; sigma; xi; kappa; lambda; tau]; % vectors with all the parameters
 
 T = 57; % Time horizon - 57 weeks
+tstep = 1/7; 
 
 % Model equations
 xdot = [    ( S*( alfa*I + beta*D + gamma*A + beta*R ) ); ...                               % \dot{S}
@@ -66,8 +68,15 @@ xdot = [    ( S*( alfa*I + beta*D + gamma*A + beta*R ) ); ...                   
             ( tau*T) ];                                                                     % \dot{E}
 
 % Implementation of the integrator
-ode = struct('x',x,'p',parms,'ode',x_dot);     
-F = integrator('F', 'idas', ode);
+opti.set_initial(x, 1)
+opti.set_initial(y, 2.0)
+ode = struct('x',x,'p',parms,'ode',xdot);
+F = integrator('F', 'cvodes', ode);
+disp(F)
 
+% for k=1:tstep:T-tstep
+%     F = integrator('F', 'cvodes', ode);
+%     x_t(:,k+1) = F('x0',x_t(:,k),'p', p_true);    
+% end
 
 
