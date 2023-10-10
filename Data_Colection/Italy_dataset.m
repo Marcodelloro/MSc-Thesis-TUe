@@ -271,7 +271,21 @@ xlim([pos_avg.date(1), pos_avg.date(end)])
 set(gca, 'TickLabelInterpreter', 'Latex')
 
 
+%% Comparison plots between coefficients and other interesting parameters
 
+load("Optimization_Results.mat")
+Npop = 59240329; % Total Population of Italy
 
-
+figure()
+plot(dataset.data, dataset.diff_tamponi, LineWidth=1.5)
+hold on
+plot(dataset.data, Opti_results{2,1}.gamma, LineWidth=1.5)
+hold on
+plot(healed_avg.date, heal_notdiag, LineWidth=1.5)
+ylabel('$\char"0023$ of cases','Interpreter','latex')
+title('\textbf{Comparison Dark Data - Real Data}','Interpreter','latex')
+grid on
+legend('Real Data - Diagnosed', 'Dark Data - Undetected','Interpreter','latex', 'Location','southeast')
+xlim([pos_avg.date(1), pos_avg.date(end)])
+set(gca, 'TickLabelInterpreter', 'Latex')
 
