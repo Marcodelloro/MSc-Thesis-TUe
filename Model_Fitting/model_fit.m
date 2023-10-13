@@ -1,6 +1,9 @@
 %% Version 2 - No Epsilon 1 value, no transmission between T1 and T2
 % In this version model_fit we will keep the main model 
 
+% This version uses a smoothing of the coeffcients by minimizing the
+% difference between the coefficients - best model yet
+
 clc
 clear all 
 
@@ -113,14 +116,14 @@ beta = opti.variable(1,N);    % beta - coefficient to go from S to D
 gamma = opti.variable(1,N);   % gamma - coefficient to go from I to D
 delta1 = opti.variable(1,N);  % delta 1 - coefficient to go from D to T1
 delta2 = opti.variable(1,N);  % delta 2 - coefficient to go from D to T2 
-epsi2 = opti.variable(1,N);   % epsilon 2 - coefficient to go from T2 to T1
+epsi = opti.variable(1,N);   % epsilon - coefficient to go from T1 to T2
 sigma1 = opti.variable(1,N);  % sigma 1 - coefficient to go from T1 to H
 sigma2 = opti.variable(1,N);  % sigma 2 - coefficient to go from T2 to H
 tau1 = opti.variable(1,N);    % tau 1 - coefficient to go from T1 to E
 tau2 = opti.variable(1,N);    % tau 2 - coefficient to go from T2 to E
 lambda = opti.variable(1,N);  % lambda - coefficient to go from I and D to H
 
-coefs = [alpha; beta; gamma; delta1; delta2; epsi2; sigma1; sigma2; tau1; tau2; lambda];
+coefs = [alpha; beta; gamma; delta1; delta2; epsi; sigma1; sigma2; tau1; tau2; lambda];
 
 % Lifting Variables
 
@@ -164,192 +167,52 @@ opti.set_initial(lambda,ones(N,1) * 0.0596);
 opti.subject_to(alpha(1:end) >= 0);
 opti.subject_to(alpha(1:end) <= 0.6); 
 
-% opti.subject_to(alpha(1:54) >= 0);
-% opti.subject_to(alpha(1:54) <= 0.6); 
-
-% opti.subject_to(alpha(55:114) >= 0);
-% opti.subject_to(alpha(55:114) <= 0.6);
-% 
-% opti.subject_to(alpha(115:242) >= 0);
-% opti.subject_to(alpha(115:242) <= 0.6);
-% 
-% opti.subject_to(alpha(243:end) >= 0);
-% opti.subject_to(alpha(243:end) <= 0.6);
-
-
 % Beta parameter - bound on beta value (different bound for different months)
 
 opti.subject_to(beta(1:end) >= 0);
 opti.subject_to(beta(1:end) <= 0.015);
-
-% opti.subject_to(beta(1:54) >= 0);
-% opti.subject_to(beta(1:54) <= 0.015);
-% 
-% opti.subject_to(beta(55:114) >= 0);
-% opti.subject_to(beta(55:114) <= 0.015);
-% 
-% opti.subject_to(beta(115:242) >= 0);
-% opti.subject_to(beta(115:242) <= 0.015); 
-% 
-% opti.subject_to(beta(243:end) >= 0);
-% opti.subject_to(beta(243:end) <= 0.015); 
-
 
 % Gamma parameter - bound on gamma value (different bound for different months)
 
 opti.subject_to(gamma(1:end) >= 0);   
 opti.subject_to(gamma(1:end) <= 0.5);
 
-% opti.subject_to(gamma(1:54) >= 0);   
-% opti.subject_to(gamma(1:54) <= 0.5);
-% 
-% opti.subject_to(gamma(55:114) >= 0);   
-% opti.subject_to(gamma(55:114) <= 0.5);
-% 
-% opti.subject_to(gamma(115:242) >= 0);   
-% opti.subject_to(gamma(115:242) <= 0.5);
-% 
-% opti.subject_to(gamma(243:end) >= 0);   
-% opti.subject_to(gamma(243:end) <= 0.5);
-
-
 % delta parameter - bound on delta value (different bound for different months)
 
-opti.subject_to(delta1(1:end) >= 0);
-opti.subject_to(delta1(1:end) <= 0.002);
+opti.subject_to(delta1(1:end) >= 0);     % bound on delta1 value
+opti.subject_to(delta1(1:end) <= 0.02);
 
-% opti.subject_to(delta1(1:54) >= 0.001);
-% opti.subject_to(delta1(1:54) <= 0.02);
-% 
-% opti.subject_to(delta1(55:114) >= 0.001);
-% opti.subject_to(delta1(55:114) <= 0.02);
-% 
-% opti.subject_to(delta1(115:242) >= 0.001);
-% opti.subject_to(delta1(115:242) <= 0.02);
-% 
-% opti.subject_to(delta1(243:end) >= 0.001);
-% opti.subject_to(delta1(243:end) <= 0.02);
+opti.subject_to(delta2(1:end) >= 0);     % bound on delta2 value
+opti.subject_to(delta2(1:end) <= 0.001);
 
+% epsi parameter - bound on epsilon value (different bound for different months)
 
-opti.subject_to(delta2(1:end) >= 0);   % bound on delta2 value
-opti.subject_to(delta2(1:end) <= 0.01);
-
-% opti.subject_to(delta2(1:54) >= 0);   % bound on delta2 value
-% opti.subject_to(delta2(1:54) <= 0.03);
-% 
-% opti.subject_to(delta2(55:114) >= 0);
-% opti.subject_to(delta2(55:114) <= 0.03);
-% 
-% opti.subject_to(delta2(115:242) >= 0);
-% opti.subject_to(delta2(115:242) <= 0.03);
-% 
-% opti.subject_to(delta2(243:end) >= 0);
-% opti.subject_to(delta2(243:end) <= 0.03);
-
-% epsi2 parameter - bound on epsilon value (different bound for different months)
-
-opti.subject_to(epsi2(1:end) >= 0);    % bound on epsi2 value
-opti.subject_to(epsi2(1:end) <= 0.07);
-
-% opti.subject_to(epsi2(1:54) >= 0);    % bound on epsi2 value
-% opti.subject_to(epsi2(1:54) <= 0.6);
-% 
-% opti.subject_to(epsi2(55:114) >= 0);    % bound on epsi2 value
-% opti.subject_to(epsi2(55:114) <= 0.6);
-% 
-% opti.subject_to(epsi2(115:242) >= 0);    % bound on epsi2 value
-% opti.subject_to(epsi2(115:242) <= 0.6);
-% 
-% opti.subject_to(epsi2(243:end) >= 0);    % bound on epsi2 value
-% opti.subject_to(epsi2(243:end) <= 0.6);
-
+opti.subject_to(epsi(1:end) >= 0);    % bound on epsi value
+opti.subject_to(epsi(1:end) <= 0.007);
 
 % sigma parameter - bound on sigma value (different bound for different months)
 
 opti.subject_to(sigma1(1:end) >= 0);   % bound on sigma1 value
 opti.subject_to(sigma1(1:end) <= 0.03);
 
-% opti.subject_to(sigma1(1:54) >= 0);   % bound on sigma1 value
-% opti.subject_to(sigma1(1:54) <= 0.03);
-% 
-% opti.subject_to(sigma1(55:114) >= 0);   
-% opti.subject_to(sigma1(55:114) <= 0.03);
-% 
-% opti.subject_to(sigma1(115:242) >= 0); 
-% opti.subject_to(sigma1(115:242) <= 0.03);
-% 
-% opti.subject_to(sigma1(243:end) >= 0); 
-% opti.subject_to(sigma1(243:end) <= 0.03);
-
-
 opti.subject_to(sigma2(1:end) >= 0);   % bound on sigma2 value
 opti.subject_to(sigma2(1:end) <= 0.03);
-
-% opti.subject_to(sigma2(1:54) >= 0);   % bound on sigma2 value
-% opti.subject_to(sigma2(1:54) <= 0.03);
-% 
-% opti.subject_to(sigma2(55:114) >= 0);
-% opti.subject_to(sigma2(55:114) <= 0.03);
-% 
-% opti.subject_to(sigma2(115:242) >= 0);
-% opti.subject_to(sigma2(115:242) <= 0.03);
-% 
-% opti.subject_to(sigma2(243:end) >= 0);
-% opti.subject_to(sigma2(243:end) <= 0.03);
-
 
 % tau parameter - bound on tau value (different bound for different months)
 
 opti.subject_to(tau1(1:end) >= 0);     % bound on tau1 value
 opti.subject_to(tau1(1:end) <= 0.03);
 
-% opti.subject_to(tau1(1:54) >= 0);     % bound on tau1 value
-% opti.subject_to(tau1(1:54) <= 0.03);
-% 
-% opti.subject_to(tau1(55:114) >= 0);
-% opti.subject_to(tau1(55:114) <= 0.03);
-% 
-% opti.subject_to(tau1(115:242) >= 0);
-% opti.subject_to(tau1(115:242) <= 0.03);
-% 
-% opti.subject_to(tau1(243:end) >= 0);
-% opti.subject_to(tau1(243:end) <= 0.03);
-
 opti.subject_to(tau2(1:end) >= 0);     % bound on tau2 value
 % opti.subject_to(tau2(1:54) <= 0.02);
 opti.subject_to(tau2(1:end) <= 0.008);
-
-% opti.subject_to(tau2(1:54) >= 0);     % bound on tau2 value
-% % opti.subject_to(tau2(1:54) <= 0.02);
-% opti.subject_to(tau2(1:54) <= 0.05);
-% 
-% opti.subject_to(tau2(55:114) >= 0);
-% % opti.subject_to(tau2(55:114) <= 0.02);
-% opti.subject_to(tau2(55:114) <= 0.05);
-% 
-% opti.subject_to(tau2(115:242) >= 0);
-% % opti.subject_to(tau2(115:242) <= 0.02);
-% opti.subject_to(tau2(115:242) <= 0.05);
-% 
-% opti.subject_to(tau2(243:end) >= 0);
-% % opti.subject_to(tau2(243:end) <= 0.02);
-% opti.subject_to(tau2(243:end) <= 0.05);
-
 
 % Lambda parameter - bound on lambda value (different bound for different months)
 
 opti.subject_to(lambda(1:end) >= 0);   % bound on lambda value
 opti.subject_to(lambda(1:end) <= 0.2);
 
-% opti.subject_to(lambda(55:114) >= 0);   % bound on lambda value
-% opti.subject_to(lambda(55:114) <= 0.2);
-% 
-% opti.subject_to(lambda(115:242) >= 0);   % bound on lambda value
-% opti.subject_to(lambda(115:242) <= 0.2);
-% 
-% opti.subject_to(lambda(243:end) >= 0);   % bound on lambda value
-% opti.subject_to(lambda(1:54) <= 0.2);
-
+% Initial Conditions constraints
 
 opti.subject_to(S(1,1) == data(1,1));
 opti.subject_to(I(1,1) == data(2,1));
@@ -371,64 +234,24 @@ opti.subject_to(E >= 0);
 
 opti.subject_to(alpha >= 2.5*beta); % bound on contagion parameter between alpha and beta
 
-% my constraints assumptions 
+% Constraints based on assumptions and previous Knowledge                                                                                        
 
 opti.subject_to(tau1 >= tau2);
 opti.subject_to(sigma2 >= sigma1);
-opti.subject_to(delta1 > 1.2 * delta2);
+opti.subject_to(delta1 > 2 * delta2);
 
-%% Constraints on the variation of the coefficents
 
-% for ii = 1:N-1
-% 
-%     opti.subject_to( alpha(1,ii + 1) <= alpha(1,ii)*1.01 )
-%     opti.subject_to( alpha(1,ii + 1) >= alpha(1,ii)*0.99 )
-% 
-%     opti.subject_to( beta(1,ii + 1) <= beta(1,ii)*1.05 )
-%     opti.subject_to( beta(1,ii + 1) >= beta(1,ii)*0.95 )
-% 
-%     opti.subject_to( gamma(1,ii + 1) <= gamma(1,ii)*1.01 )
-%     opti.subject_to( gamma(1,ii + 1) >= gamma(1,ii)*0.99 )
-% 
-%     opti.subject_to( delta1(1,ii + 1) <= delta1(1,ii)*1.05 )
-%     opti.subject_to( delta1(1,ii + 1) >= delta1(1,ii)*0.95 )
-% 
-%     opti.subject_to( delta2(1,ii + 1) <= delta2(1,ii)*1.05 )
-%     opti.subject_to( delta2(1,ii + 1) >= delta2(1,ii)*0.95 )
-% 
-%     % opti.subject_to( epsi1(1,ii + 1) <= epsi1(1,ii)*1.05 )
-%     % opti.subject_to( epsi1(1,ii + 1) >= epsi1(1,ii)*0.95 )
-% 
-%     opti.subject_to( epsi2(1,ii + 1) <= epsi2(1,ii)*1.05 )
-%     opti.subject_to( epsi2(1,ii + 1) >= epsi2(1,ii)*0.95)
-% 
-%     opti.subject_to( sigma1(1,ii + 1) <= sigma1(1,ii)*1.05 )
-%     opti.subject_to( sigma1(1,ii + 1) >= sigma1(1,ii)*0.95 )
-% 
-%     opti.subject_to( sigma2(1,ii + 1) <= sigma2(1,ii)*1.05 )
-%     opti.subject_to( sigma2(1,ii + 1) >= sigma2(1,ii)*0.95 )
-% 
-%     opti.subject_to( tau1(1,ii + 1) <= tau1(1,ii)*1.05 )
-%     opti.subject_to( tau1(1,ii + 1) >= tau1(1,ii)*0.95 )
-% 
-%     opti.subject_to( tau2(1,ii + 1) <= tau2(1,ii)*1.05 )
-%     opti.subject_to( tau2(1,ii + 1) >= tau2(1,ii)*0.95)
-% 
-%     opti.subject_to( lambda(1,ii + 1) <= lambda(1,ii)*1.05 )
-%     opti.subject_to( lambda(1,ii + 1) >= lambda(1,ii)*0.95 )
-% 
-% end
+%% RK45 simulation of the differential equations
 
-%% 
 % Specify system dynamics - creation of the handle functions
 % Version 2
-f = @(X, coefs)   [           -X(1).*(coefs(1)*X(2) + coefs(2)*X(3));                                                 % dS/dt = S_dot 
+f = @(X, coefs)   [           -X(1)*(coefs(1)*X(2) + coefs(2)*X(3));                                                 % dS/dt = S_dot 
                               ( X(1)*(coefs(1)*X(2) + coefs(2)*X(3)) ) - ( (coefs(3) + coefs(11))*X(2) );             % dI/dt = I_dot
                               (X(2)*coefs(3)) - ( X(3)*(coefs(11) + coefs(4) + coefs(5)) );                           % dD/dt = D_dot
-                              (coefs(4)*X(3)) - ( (coefs(7) + coefs(9))*X(4) ) + (coefs(6)*X(5)) ;       % dT1/dt = T1_dot
-                              (coefs(5)*X(3)) - ( (coefs(9) + coefs(11) + coefs(7))*X(5) ) ;                          % dT2/dt = T2_dot     V2
-                              ( (X(2) + X(3))*coefs(11) ) + (X(4)*coefs(7)) + (X(5)*coefs(8)) ;                       % dH/dt = H_dot
-                              (X(4)*coefs(9)) + (X(5)*coefs(10)) ];  
+                              ( coefs(4)*X(3) ) - ( (coefs(7) + coefs(9) + coefs(6))*X(4) );                            % dT1/dt = T1_dot
+                              ( coefs(5)*X(3) ) - ( (coefs(8) + coefs(10))*X(5) ) + ( coefs(6)*X(4) );                     % dT2/dt = T2_dot
+                              ( (X(2) + X(3))*coefs(11) ) + ( X(4)*coefs(7) ) + ( X(5)*coefs(8) ) ;                       % dH/dt = H_dot
+                              ( X(4)*coefs(9) ) + ( X(5)*coefs(10) ) ];  
 
 dt = 1;
 for k=1:N-1      % loop over control intervals
@@ -445,6 +268,13 @@ for k=1:N-1      % loop over control intervals
 end
 
 %% Actual Optimization Simulation
+
+% 8 different areas will be covered
+policy_idx = [1 40 69 116 141 190 242 294 399];   % Values taken from italian policies applied for the pandemic
+
+for ii=1:length(policy_idx)
+    policy_dates(ii) = [new_time(policy_idx(ii))];
+end
 
 data_obj = horzcat(data(:));
 X_obj = [];
@@ -472,9 +302,9 @@ elseif strcmp(selectedOption, 'Full sampling')
 
 end
 
-% Cost related to the coefficients
+% building the actual COST FUNCTIONS FOR THE CONSTRAINT
 
-coefs_matrix_obj = [    sum( ( (diff(coefs(1,:)))./0.6).^2 );
+coefs_matrix_obj = [    sum( ( (diff(coefs(1,:)))./0.6).^2 );    
                         sum( ( (diff(coefs(2,:)))./0.015).^2 );
                         sum( ( (diff(coefs(3,:)))./0.5).^2 );
                         sum( ( (diff(coefs(4,:)))./0.02).^2 );
@@ -520,7 +350,7 @@ sol = opti.solve();   % actual solver
 
 % Table of the coefficients
 
-column_names = {'alpha', 'beta', 'gamma', 'delta1', 'delta2', 'epsi2', 'sigma1', 'sigma2', 'tau1', 'tau2', 'lambda'};
+column_names = {'alpha', 'beta', 'gamma', 'delta1', 'delta2', 'epsi', 'sigma1', 'sigma2', 'tau1', 'tau2', 'lambda'};
 opti_coefficients = array2table(opti.debug.value(coefs)', 'VariableNames', column_names);
 
 % Trends of every group SIDTTHE
@@ -688,9 +518,9 @@ xlim([new_time(1), new_time(end)])
 set(gca, 'TickLabelInterpreter', 'Latex')
 
 
-% Coefficient epsi2
+% Coefficient epsi
 figure(11)
-plot(new_time, opti_coefficients.epsi2, LineWidth=1.5)
+plot(new_time, opti_coefficients.epsi, LineWidth=1.5)
 ylabel('Coefficients Values','Interpreter','latex')
 title('\textbf{Coefficient $\epsilon_2$}','Interpreter','latex')
 grid on
@@ -735,29 +565,30 @@ legend('$\lambda$', 'Interpreter','latex', 'Location','northeast')
 xlim([new_time(1), new_time(end)])
 set(gca, 'TickLabelInterpreter', 'Latex')
 
-%% Additional Intersting plots
-% 5 different areas will be covered
+%% Additional Intersting plots,
 
-policy_dates = [ new_time(1) new_time(54) new_time(114) new_time(242) new_time(end)];
-
-customColors2 = {   [1, 0.5, 0.2],
+customColors2 = {   [1, 0.6, 0.2],
+                    [1, 0.3, 0.05],
+                    [1, 0.2, 0.05],
+                    [0.8, 0.2, 0.1],
+                    [1, 0.2, 0.05],            
                     [0.8, 0.2, 0.1],
                     [1, 0.3, 0.05],
-                    [1, 0.6, 0.2],
+                    [1, 0.6, 0.2]
                 };
 
 for ii = 1:length(policy_dates)-1
     area.x(ii, :) = [policy_dates(ii) policy_dates(ii) policy_dates(ii+1) policy_dates(ii+1)];
-    area.y_alpha(ii, :) = [0 0.3 0.3 0];
-    area.y_beta(ii, :) = [0 max(opti_coefficients.beta)*1.1 max(opti_coefficients.beta)*1.1 0];
-    area.y_gamma(ii, :) = [0 max(opti_coefficients.gamma)*1.1 max(opti_coefficients.gamma)*1.1 0];
+    area.y_alpha(ii, :) = [0 max(opti_coefficients.alpha)*1.05 max(opti_coefficients.alpha)*1.05 0];
+    area.y_beta(ii, :) = [0 max(opti_coefficients.beta)*1.05 max(opti_coefficients.beta)*1.05 0];
+    area.y_gamma(ii, :) = [0 max(opti_coefficients.gamma)*1.05 max(opti_coefficients.gamma)*1.05 0];
     
 end
 
 % Figure of the alpha trend related to policy In italy
 figure()
 for ii = 1:length(policy_dates)-1
-    fill(area.x(ii, :) ,area.y(1, :), customColors2{ii,1} ,'FaceAlpha',.5,'EdgeColor', 'none','HandleVisibility', 'off')
+    fill(area.x(ii, :) ,area.y_alpha(1, :), customColors2{ii,1} ,'FaceAlpha',.5,'EdgeColor', 'none','HandleVisibility', 'off')
     hold on
     xline(policy_dates(ii),":",'HandleVisibility', 'off')
     hold on 
@@ -768,13 +599,14 @@ ylabel('Coefficients Values','Interpreter','latex')
 title('\textbf{$\alpha$ coefficient}','Interpreter','latex')
 grid on
 legend('Interpreter','latex')
+ylim([0, max(opti_coefficients.alpha)*1.05])
 xlim([new_time(1), new_time(end)])
 set(gca, 'TickLabelInterpreter', 'Latex')
 
 % Figure of the beta trend related to policy In italy
 figure()
 for ii = 1:length(policy_dates)-1
-    fill(area.x(ii, :) ,area.y(1, :), customColors2{ii,1} ,'FaceAlpha',.5,'EdgeColor', 'none','HandleVisibility', 'off')
+    fill(area.x(ii, :) ,area.y_beta(1, :), customColors2{ii,1} ,'FaceAlpha',.5,'EdgeColor', 'none','HandleVisibility', 'off')
     hold on
     xline(policy_dates(ii),":",'HandleVisibility', 'off')
     hold on 
@@ -786,7 +618,7 @@ title('\textbf{$\beta$ coefficient}','Interpreter','latex')
 grid on
 legend('Interpreter','latex')
 xlim([new_time(1), new_time(end)])
-ylim([0, max(opti_coefficients.beta)*1.1])
+ylim([4.8e-3, max(opti_coefficients.beta)*1.05])
 set(gca, 'TickLabelInterpreter', 'Latex')
 
 
@@ -805,5 +637,5 @@ title('\textbf{$\gamma$ coefficient}','Interpreter','latex')
 grid on
 legend('Interpreter','latex')
 xlim([new_time(1), new_time(end)])
-ylim([0, max(opti_coefficients.gamma)*1.1])
+ylim([0, max(opti_coefficients.gamma)*1.05])
 set(gca, 'TickLabelInterpreter', 'Latex')
