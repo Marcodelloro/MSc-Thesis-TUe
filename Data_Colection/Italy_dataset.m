@@ -23,13 +23,16 @@ for ii = 1:window:size(dataset,1)
     pos_avg.data(ii) = mean(dataset.isolamento_domiciliare(ii:ii+ window-1));   % weekly average of Positive, detected, NOT THREATNED pop
     healed_avg.data(ii) = mean(dataset.guariti(ii:ii+ window-1));               % weekly average of healed pop
     dec_avg.data(ii) = mean(dataset.deceduti(ii:ii+ window-1));                 % weekly average of deceased pop
+    tests_avg(ii) = mean(dataset.diff_tamponi(ii:ii+ window-1));     
 end
+
 
 hosp_avg.data = nonzeros(hosp_avg.data);
 ICU_avg.data = nonzeros(ICU_avg.data);
 pos_avg.data = nonzeros(pos_avg.data);
 healed_avg.data = nonzeros(healed_avg.data);
 dec_avg.data = nonzeros(dec_avg.data);
+tests_avg = nonzeros(tests_avg);
 
 t1 = datetime(2020,8,31);
 t2 = datetime(2021,10,3);
@@ -135,6 +138,10 @@ total_heal.date = healed_avg.date;
 SIDTTHE_data = {infected_avg, 'Infected'; pos_avg, 'Diagnosed'; hosp_avg, 'Hospitalised'; ICU_avg, 'ICU threatend'; dec_avg, 'Deceased'; total_heal, 'Healed'};
 filename = 'SIDTTHE_data.mat';
 save(filename, 'SIDTTHE_data'); 
+
+% save of the data from Testing activities
+filename = 'Tests_data.mat';
+save(filename, 'tests_avg'); 
 
 %% Plot section of the different trends
 

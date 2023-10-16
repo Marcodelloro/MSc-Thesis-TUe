@@ -4,9 +4,11 @@
 % constraints -  MAURO IDEA
 
 clc
-clear all 
+clear all
 
 load('/Users/marcodelloro/Desktop/Thesis/MSc-Thesis-TUe/Data_Colection/SIDTTHE_data.mat');
+load('/Users/marcodelloro/Desktop/Thesis/MSc-Thesis-TUe/Data_Colection/Tests_data.mat');
+
 addpath('/Users/marcodelloro/Downloads/casadi-3.6.3-osx64-matlab2018b')
 import casadi.*;
 opti = casadi.Opti();
@@ -15,6 +17,7 @@ opti = casadi.Opti();
 
 date = SIDTTHE_data{1,1}.date;
 Npop = 59240329; % Total Population of Italy
+ICUs = 6458/Npop; % Total number of ICUs in Italy @ 9 Ottobre 2020
 
 I_data = SIDTTHE_data{1,1}.data / Npop;     % I group - Infected Population **
 D_data = SIDTTHE_data{2,1}.data / Npop;     % D group - Diagnosed Population
@@ -97,6 +100,7 @@ else
             original_data = DataArray{1, ii};
         
             upsampled_DataArray{ii,1} = interp1(SIDTTHE_data{1, 1}.date, original_data, new_time);
+            tests = interp1(SIDTTHE_data{1, 1}.date, tests_avg, new_time);
         
         end
 
@@ -106,6 +110,7 @@ else
         disp('Invalid selection.');
     end
 end
+
 
 %% Setting of the optimization variables
 
@@ -176,7 +181,7 @@ opti.subject_to(beta(1:end) <= 0.015);
 
 % Gamma parameter - bound on gamma value (different bound for different months)
 
-opti.subject_to(gamma(1:end) >= 0);   
+opti.subject_to(gamma(1:end) >= 0); 
 opti.subject_to(gamma(1:end) <= 0.5);
 
 % delta parameter - bound on delta value (different bound for different months)
@@ -268,22 +273,27 @@ dd = 1; % days for how much the constraint will be removed
 
 for kk = 2:length(policy_idx)-1
     for jj = policy_idx(kk)+dd:policy_idx(kk+1)-1
-       
+
         opti.subject_to( alpha(1,jj + 1) <= alpha(1,jj)*1.01 )
         opti.subject_to( alpha(1,jj + 1) >= alpha(1,jj)*0.99 )
-    
-        opti.subject_to( beta(1,jj + 1) <= beta(1,jj)*1.05 )
-        opti.subject_to( beta(1,jj + 1) >= beta(1,jj)*0.95 )
+
+        opti.subject_to( beta(1,jj + 1) <= beta(1,jj)*1.01 )
+        opti.subject_to( beta(1,jj + 1) >= beta(1,jj)*0.99 )
 
     end
 end
 
-% constraint on the first part of the simulation
+%% Additional constraints to make the Coefs Work
 
+% constraint on the first part of the simulation
 for ii = 1:policy_idx(2)-1
     opti.subject_to( alpha(1,ii + 1) > alpha(1,ii) )
     opti.subject_to( beta(1,ii + 1) > beta(1,ii) )
 end
+
+ opti.subject_to( beta(1,policy_idx(3)+dd) <= beta(1,policy_idx(3)) )
+ opti.subject_to( beta(1,policy_idx(6)+dd) <= beta(1,policy_idx(6))*0.9 )
+ opti.subject_to( alpha(1,policy_idx(6)+dd) <= alpha(1,policy_idx(6))*0.9 )
 
 %% RK45 simulation of the differential equations
 
@@ -368,8 +378,8 @@ end
 % Definitions of some weights for the optimization
 
 w1 = 5;     % weight for the difference between data and model
-w2 = 3;     % weight for the integral cost 1 
-w3 = 4;     % weight for the integral cost 2
+w2 = 10;     % weight for the integral cost 1 
+w3 = 10;     % weight for the integral cost 2
 w4 = 1;   % weight on coefficient smoothing 
 
 
@@ -667,6 +677,7 @@ for ii = 1:length(policy_dates)-1
 end
 hold on
 plot(new_time, opti_coefficients.gamma,'k','LineWidth',1.5, 'DisplayName', '$\gamma$')
+hold on 
 ylabel('Coefficients Values','Interpreter','latex')
 title('\textbf{$\gamma$ coefficient}','Interpreter','latex')
 grid on
@@ -674,3 +685,8 @@ legend('Interpreter','latex','location','southeast')
 xlim([new_time(1), new_time(end)])
 ylim([0, max(opti_coefficients.gamma)*1.05])
 set(gca, 'TickLabelInterpreter', 'Latex')
+
+figure()
+plot(new_time, tests./Npop,'k.-','LineWidth',1.5, 'DisplayName', 'Testing Activity')
+
+

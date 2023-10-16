@@ -639,3 +639,68 @@ legend('Interpreter','latex')
 xlim([new_time(1), new_time(end)])
 ylim([0, max(opti_coefficients.gamma)*1.05])
 set(gca, 'TickLabelInterpreter', 'Latex')
+
+%% Means of the coefficients 
+
+% Averaging of the data by week
+window = 7; % weekly average
+
+for ii = length(opti_coefficients.alpha):-window:1
+
+    avg_coefs.alpha(ii)= mean(opti_coefficients.alpha(ii - window +1:ii));      
+    avg_coefs.beta(ii) = mean(opti_coefficients.beta(ii - window +1:ii));     
+    avg_coefs.gamma(ii) = mean(opti_coefficients.gamma(ii - window +1:ii));
+    avg_coefs.delta1(ii) = mean(opti_coefficients.delta1(ii - window +1:ii));         
+    avg_coefs.delta2(ii) = mean(opti_coefficients.delta2(ii - window +1:ii));
+    avg_coefs.epsi(ii) = mean(opti_coefficients.epsi(ii - window +1:ii));
+    avg_coefs.sigma1(ii) = mean(opti_coefficients.sigma1(ii - window +1:ii));
+    avg_coefs.sigma2(ii) = mean(opti_coefficients.sigma2(ii - window +1:ii));
+    avg_coefs.tau1(ii) = mean(opti_coefficients.tau1(ii - window +1:ii));
+    avg_coefs.tau2(ii) = mean(opti_coefficients.tau2(ii - window +1:ii));
+    avg_coefs.lambda(ii) = mean(opti_coefficients.lambda(ii - window +1:ii));
+
+end
+
+avg_coefs.alpha = (avg_coefs.alpha);
+avg_coefs.beta = (avg_coefs.beta);
+avg_coefs.gamma = (avg_coefs.gamma);
+avg_coefs.delta1 = (avg_coefs.delta1);
+avg_coefs.delta2 = (avg_coefs.delta2);
+avg_coefs.epsi = (avg_coefs.epsi);
+avg_coefs.sigma1 = (avg_coefs.sigma1);
+avg_coefs.sigma2 = (avg_coefs.sigma2);
+avg_coefs.tau1 = (avg_coefs.tau1);
+avg_coefs.tau2 = (avg_coefs.tau2);
+avg_coefs.lambda = (avg_coefs.lambda);
+
+% create a vector with constant values (only for alpha and beta)
+
+nonZeroAlpha = avg_coefs.alpha(avg_coefs.alpha ~= 0);
+nonZeroBeta = avg_coefs.beta(avg_coefs.beta ~= 0);
+
+avg_coefs.alpha = repelem(nonZeroAlpha, 7);
+avg_coefs.beta = repelem(nonZeroBeta, 7);
+
+
+figure()
+plot(new_time, opti_coefficients.alpha, LineWidth=1.5)
+hold on
+plot(new_time, avg_coefs.alpha, LineWidth=1.5)
+ylabel('Coefficients Values','Interpreter','latex')
+title('\textbf{$\alpha$ coefficient}','Interpreter','latex')
+grid on
+legend('$\alpha$','$\alpha$ averaged','Interpreter','latex', 'Location','southeast')
+xlim([new_time(1), new_time(end)])
+set(gca, 'TickLabelInterpreter', 'Latex')
+
+figure()
+plot(new_time, opti_coefficients.beta, LineWidth=1.5)
+hold on
+plot(new_time, avg_coefs.beta, LineWidth=1.5)
+ylabel('Coefficients Values','Interpreter','latex')
+title('\textbf{$\beta$ coefficient}','Interpreter','latex')
+grid on
+legend('$\beta$','$\beta$ averaged','Interpreter','latex', 'Location','southeast')
+xlim([new_time(1), new_time(end)])
+set(gca, 'TickLabelInterpreter', 'Latex')
+
