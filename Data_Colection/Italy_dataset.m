@@ -11,6 +11,9 @@ clear all
 close all
 
 dataset = readtable('/Users/marcodelloro/Desktop/Thesis/Codes/Italy_complete_dataset.xlsx');
+variants_data = readtable('/Users/marcodelloro/Desktop/Thesis/Codes/Italy_complete_dataset.xlsx', 'Sheet','Variants');
+variants_data = variants_data(1:1368,:);
+
 dataset = dataset(190:588,:);
 dataset.data = datetime(dataset.data, 'InputFormat', 'dd-MMM-yyyy HH:mm:ss');
 
@@ -132,6 +135,29 @@ heal_notdiag = heal_rate .* infected_avg.data;
 
 total_heal.data = healed_avg.data + heal_notdiag;
 total_heal.date = healed_avg.date;
+
+%% Modifing and working on the variants
+
+varNames = horzcat('date', variants_data.variant(1:23)');
+variants = array2table(zeros(57, 24), 'VariableNames', varNames);
+variants_data.percent_variant = str2double(variants_data.percent_variant);
+
+variants.date = dec_avg.date';
+
+idx = 1;
+
+for ii=1:23:size(variants_data,1)-23
+
+    perc = variants_data.percent_variant(ii:ii+22)';
+    variants{idx,2:end} = perc;
+    idx = idx+1;
+end
+
+% cancelling columns with no values
+
+zeroColumns = [3 4 10 11 16 17 18 19 22 23 24];
+variants(:, zeroColumns) = [];
+variants =  variants(1:57,:);
 
 %% Saving all data
 
@@ -294,5 +320,40 @@ title('\textbf{Comparison Dark Data - Real Data}','Interpreter','latex')
 grid on
 legend('Real Data - Diagnosed', 'Dark Data - Undetected','Interpreter','latex', 'Location','southeast')
 xlim([pos_avg.date(1), pos_avg.date(end)])
+set(gca, 'TickLabelInterpreter', 'Latex')
+
+%% SARS-CoV-V2 Variants figure
+
+
+customColors = {[0,	0.447,	0.741],
+                [0.85,	0.325,	0.098],
+                [0.929,	0.694,	0.125],
+                [0.494,	0.184,	0.556],
+                [0.466,	0.674,	0.188],
+                [0.301,	0.745,	0.933],
+                [0.635,	0.078,	0.184],
+                [0 0 1],            
+                [1 0 0],              
+                [1 1 0], 
+                [0.1 0.1 0.1],
+                [0 1 0.5]
+                };
+
+
+% modifiy data for the plot
+data_barplot = removevars(variants,'date');
+data_barplot = table2array(data_barplot);
+date_barplot = variants.date;
+
+figure()
+h = bar(date_barplot,data_barplot,0.8, "stacked");
+for ii = 1:size(customColors, 1)
+    set(h(1, ii),'facecolor',customColors{ii,1})
+end
+ylabel('$\%$ Variant','Interpreter','latex')
+title('\textbf{SARS-CoV-2 Variants in The Netherlands}','Interpreter','latex')
+legend('SARS-CoV-2', 'B.1.351', 'B.1.617.2 - DELTA VARIANT', 'B.1.1.7 - ALPHA VARIANT', 'B.1.427/B.1.429', 'B.1.525', 'B.1.620', 'B.1.621', 'BA.1 - OMICRON BA1 VARIANT', 'BA.2 - OMICRON BA2 VARIANT', 'C.37', 'P.1 - GAMMA VARIANT', 'Interpreter','latex','Location','northeastoutside')
+xlim([variants.date(1), variants.date(end)])
+ylim([0,100.1])
 set(gca, 'TickLabelInterpreter', 'Latex')
 

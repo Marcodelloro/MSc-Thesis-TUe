@@ -187,15 +187,15 @@ opti.subject_to(gamma(1:end) <= 0.5);
 % delta parameter - bound on delta value (different bound for different months)
 
 opti.subject_to(delta1(1:end) >= 0);     % bound on delta1 value
-opti.subject_to(delta1(1:end) <= 0.005);
+opti.subject_to(delta1(1:end) <= 0.002);
 
 opti.subject_to(delta2(1:end) >= 0);     % bound on delta2 value
-opti.subject_to(delta2(1:end) <= 0.002);
+opti.subject_to(delta2(1:end) <= 5e-4);
 
 % epsi parameter - bound on epsilon value (different bound for different months)
 
 opti.subject_to(epsi(1:end) >= 0);    % bound on epsi value
-opti.subject_to(epsi(1:end) <= 0.001);
+opti.subject_to(epsi(1:end) <= 5e-4);
 
 % sigma parameter - bound on sigma value (different bound for different months)
 
@@ -230,9 +230,10 @@ opti.subject_to(H(1,1) == data(6,1));
 opti.subject_to(E(1,1) == data(7,1));
 
 % Initial Conditions constraints on Parameters 
-opti.subject_to(alpha(1,1) == 0.4);
-opti.subject_to(beta(1,1) == 0.01);
-opti.subject_to(gamma(1,1) == 0.3);
+
+% opti.subject_to(alpha(1,1) == 0.2);
+% opti.subject_to(beta(1,1) == 10e-3);
+% opti.subject_to(gamma(1,1) == 0.3);
 
 
 opti.subject_to(S + I + D + T1 + T2 + H + E == 1);
@@ -251,7 +252,7 @@ opti.subject_to(alpha >= 3*beta); % bound on contagion parameter between alpha a
 
 opti.subject_to(tau1 >= tau2);
 opti.subject_to(sigma2 >= sigma1);
-opti.subject_to(delta1 >  3 * delta2);
+opti.subject_to(delta1 > delta2);
 
 %% HARD Constraints on the variation of the coefficents 
 
@@ -271,26 +272,46 @@ dd = 1; % days for how much the constraint will be removed
 % Note that as assumption I ASSUME that only coefficients \alpha and \beta can be influenced by
 % the different policies applied form the government
 
+% constraints NO VARIATION 
 for kk = 2:length(policy_idx)-1
     for jj = policy_idx(kk)+dd:policy_idx(kk+1)-1
 
-        opti.subject_to( alpha(1,jj + 1) <= alpha(1,jj)*1.01 )
-        opti.subject_to( alpha(1,jj + 1) >= alpha(1,jj)*0.99 )
+        opti.subject_to( alpha(1,jj + 1) == alpha(1,jj) )
+        opti.subject_to( alpha(1,jj + 1) == alpha(1,jj) )
 
-        opti.subject_to( beta(1,jj + 1) <= beta(1,jj)*1.01 )
-        opti.subject_to( beta(1,jj + 1) >= beta(1,jj)*0.99 )
+        opti.subject_to( beta(1,jj + 1) == beta(1,jj) )
+        opti.subject_to( beta(1,jj + 1) == beta(1,jj) )
 
     end
 end
 
+%---------------------------------------------------------------------
+
+% constraints WITH VARIATION 
+% for kk = 2:length(policy_idx)-1
+%     for jj = policy_idx(kk)+dd:policy_idx(kk+1)-1
+% 
+%     opti.subject_to( alpha(1,jj + 1) <= alpha(1,jj)*1.01 )
+%     opti.subject_to( alpha(1,jj + 1) >= alpha(1,jj)*0.99 )
+% 
+%     opti.subject_to( beta(1,jj + 1) <= beta(1,jj)*1.01 )
+%     opti.subject_to( beta(1,jj + 1) >= beta(1,jj)*0.99 )
+% 
+%     end
+% end
+
 %% Additional constraints to make the Coefs Work
 
 % constraint on the first part of the simulation
-for ii = 1:policy_idx(2)-1
-    opti.subject_to( alpha(1,ii + 1) > alpha(1,ii) )
-    opti.subject_to( beta(1,ii + 1) > beta(1,ii) )
-end
+for jj = 1:policy_idx(2)-1
+    opti.subject_to( alpha(1,jj + 1) <= alpha(1,jj)*1.01 )
+    opti.subject_to( alpha(1,jj + 1) >= alpha(1,jj)*0.99 )
 
+    opti.subject_to( beta(1,jj + 1) <= beta(1,jj)*1.01 )
+    opti.subject_to( beta(1,jj + 1) >= beta(1,jj)*0.99 )
+end
+ opti.subject_to( alpha(1,policy_idx(2)+dd) <= alpha(1,policy_idx(2))*0.9 )
+ opti.subject_to( beta(1,policy_idx(2)+dd) <= beta(1,policy_idx(2))*0.9 )
  opti.subject_to( beta(1,policy_idx(3)+dd) <= beta(1,policy_idx(3)) )
  opti.subject_to( beta(1,policy_idx(6)+dd) <= beta(1,policy_idx(6))*0.9 )
  opti.subject_to( alpha(1,policy_idx(6)+dd) <= alpha(1,policy_idx(6))*0.9 )
@@ -303,7 +324,7 @@ f = @(X, coefs)   [           -X(1)*(coefs(1)*X(2) + coefs(2)*X(3));            
                               ( X(1)*(coefs(1)*X(2) + coefs(2)*X(3)) ) - ( (coefs(3) + coefs(11))*X(2) );             % dI/dt = I_dot
                               (X(2)*coefs(3)) - ( X(3)*(coefs(11) + coefs(4) + coefs(5)) );                           % dD/dt = D_dot
                               ( coefs(4)*X(3) ) - ( (coefs(7) + coefs(9) + coefs(6))*X(4) );                            % dT1/dt = T1_dot
-                              ( coefs(5)*X(3) ) - ( (coefs(8) + coefs(10))*X(5) ) + ( coefs(6)*X(4) );                     % dT2/dt = T2_dot
+                              ( coefs(5)*X(3) ) - ( (coefs(8) + coefs(10))*X(5) ) + ( coefs(6)*X(4) );                  % dT2/dt = T2_dot
                               ( (X(2) + X(3))*coefs(11) ) + ( X(4)*coefs(7) ) + ( X(5)*coefs(8) ) ;                       % dH/dt = H_dot
                               ( X(4)*coefs(9) ) + ( X(5)*coefs(10) ) ];  
 
@@ -377,10 +398,10 @@ end
 
 % Definitions of some weights for the optimization
 
-w1 = 5;     % weight for the difference between data and model
+w1 = 6;     % weight for the difference between data and model
 w2 = 10;     % weight for the integral cost 1 
-w3 = 10;     % weight for the integral cost 2
-w4 = 1;   % weight on coefficient smoothing 
+w3 = 1;     % weight for the integral cost 2
+w4 = 5;   % weight on coefficient smoothing 
 
 
 obj = sum((data_obj - X_obj).^2) * w1 + integral_cost1 * w2 + integral_cost2 * w3 + cost_matrix_obj * w4 ; 
@@ -408,7 +429,7 @@ alpha_bound = any(opti_coefficients.alpha == 0.6)
 beta_bound = any(opti_coefficients.beta == 0.015)
 gamma_bound = any(opti_coefficients.gamma == 0.5)
 delta1_bound = any(opti_coefficients.delta1 == 0.002)
-delta2_bound = any(opti_coefficients.delta2 == 0.001)
+delta2_bound = any(opti_coefficients.delta2 == 5e-4)
 tau1_bound = any(opti_coefficients.tau1 == 0.03)
 tau2_bound = any(opti_coefficients.tau2 == 0.05)
 sigma1_bound = any(opti_coefficients.sigma1 == 0.03)
@@ -588,7 +609,7 @@ set(gca, 'TickLabelInterpreter', 'Latex')
 
 
 % Coefficients tau1 and tau2
-figure(13)
+ figure(13)
 plot(new_time, opti_coefficients.tau1, LineWidth=1.5)
 hold on
 plot(new_time, opti_coefficients.tau2, LineWidth=1.5)
@@ -623,6 +644,7 @@ customColors2 = {   [1, 0.6, 0.2],
                 };
 
 for ii = 1:length(policy_dates)-1
+
     area.x(ii, :) = [policy_dates(ii) policy_dates(ii) policy_dates(ii+1) policy_dates(ii+1)];
     area.y_alpha(ii, :) = [0 max(opti_coefficients.alpha)*1.05 max(opti_coefficients.alpha)*1.05 0];
     area.y_beta(ii, :) = [0 max(opti_coefficients.beta)*1.05 max(opti_coefficients.beta)*1.05 0];
@@ -686,7 +708,21 @@ xlim([new_time(1), new_time(end)])
 ylim([0, max(opti_coefficients.gamma)*1.05])
 set(gca, 'TickLabelInterpreter', 'Latex')
 
+
 figure()
-plot(new_time, tests./Npop,'k.-','LineWidth',1.5, 'DisplayName', 'Testing Activity')
-
-
+% first data set on the primary y-axis
+yyaxis left;
+plot(new_time, opti_coefficients.gamma,'LineWidth', 1.5);
+ylabel('$\gamma$ Coefficients Values','Interpreter','latex')
+ax1 = gca;
+ax1.YColor = 'k';
+% second data set on the secondary y-axis
+yyaxis right;
+plot(new_time, tests./Npop,'-.','LineWidth',1.5,'DisplayName', 'Testing Activity')
+ylabel('$\char"0023$ of Tests','Interpreter','latex')
+ax2 = gca;
+ax2.YColor = 'k';
+title('\textbf{Comparison Testing Activity and $\gamma$ Coefficient}','Interpreter','latex')
+legend(' $\gamma$', 'Tests','Interpreter','latex')
+grid on;
+xlim([new_time(1), new_time(end)])
