@@ -357,3 +357,4 @@ xlim([variants.date(1), variants.date(end)])
 ylim([0,100.1])
 set(gca, 'TickLabelInterpreter', 'Latex')
 
+

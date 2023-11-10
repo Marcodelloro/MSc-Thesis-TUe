@@ -17,7 +17,7 @@ opti = casadi.Opti();
 
 date = SIDTTHE_data{1,1}.date;
 Npop = 59240329; % Total Population of Italy
-ICUs = 6458/Npop; % Total number of ICUs in Italy @ 9 Ottobre 2020
+ICUs = 2000/Npop; % Total number of ICUs in Italy @ 9 Ottobre 2020
 
 I_data = SIDTTHE_data{1,1}.data / Npop;     % I group - Infected Population **
 D_data = SIDTTHE_data{2,1}.data / Npop;     % D group - Diagnosed Population
@@ -250,8 +250,8 @@ opti.subject_to(alpha >= 3*beta); % bound on contagion parameter between alpha a
 
 % my constraints assumptions 
 
-opti.subject_to(tau1 >= tau2);
-opti.subject_to(sigma2 >= sigma1);
+opti.subject_to(tau1 <= tau2);
+opti.subject_to(sigma2 <= sigma1);
 opti.subject_to(delta1 > delta2);
 
 %% HARD Constraints on the variation of the coefficents 
@@ -319,28 +319,51 @@ end
 %% RK45 simulation of the differential equations
 
 % Specify system dynamics - creation of the handle functions
-% Version 2
-f = @(X, coefs)   [           -X(1)*(coefs(1)*X(2) + coefs(2)*X(3));                                                 % dS/dt = S_dot 
+%% Version 1 switch 
+
+q = opti.variable(1,N);
+
+for kk = 1:N 
+
+    if upsampled_DataArray{5,1}(kk) <= ICUs
+        q(kk) = 0;
+    else
+        q(kk) = 1;
+    end
+end
+
+
+
+f = @(X, coefs, q)       (1 - q) * [ -X(1)*(coefs(1)*X(2) + coefs(2)*X(3));                                                 % dS/dt = S_dot 
                               ( X(1)*(coefs(1)*X(2) + coefs(2)*X(3)) ) - ( (coefs(3) + coefs(11))*X(2) );             % dI/dt = I_dot
                               (X(2)*coefs(3)) - ( X(3)*(coefs(11) + coefs(4) + coefs(5)) );                           % dD/dt = D_dot
                               ( coefs(4)*X(3) ) - ( (coefs(7) + coefs(9) + coefs(6))*X(4) );                            % dT1/dt = T1_dot
                               ( coefs(5)*X(3) ) - ( (coefs(8) + coefs(10))*X(5) ) + ( coefs(6)*X(4) );                  % dT2/dt = T2_dot
                               ( (X(2) + X(3))*coefs(11) ) + ( X(4)*coefs(7) ) + ( X(5)*coefs(8) ) ;                       % dH/dt = H_dot
-                              ( X(4)*coefs(9) ) + ( X(5)*coefs(10) ) ];  
+                              ( X(4)*coefs(9) ) + ( X(5)*coefs(10) ) ] + ...
+                              q * [ -X(1)*(coefs(1)*X(2) + coefs(2)*X(3));                                                 % dS/dt = S_dot 
+                              ( X(1)*(coefs(1)*X(2) + coefs(2)*X(3)) ) - ( (coefs(3) + coefs(11))*X(2) );             % dI/dt = I_dot
+                              (X(2)*coefs(3)) - ( X(3)*(coefs(11) + coefs(4) + coefs(5)) );                           % dD/dt = D_dot
+                              ( coefs(4)*X(3) ) - ( (coefs(7) + coefs(9) + coefs(6))*X(4) );                            % dT1/dt = T1_dot
+                              ( coefs(5)*X(3) ) - ( (coefs(8) + coefs(10))*X(5) );                  % dT2/dt = T2_dot
+                              ( (X(2) + X(3))*coefs(11) ) + ( X(4)*coefs(7) ) + ( X(5)*coefs(8) ) ;                       % dH/dt = H_dot
+                              ( X(4)*coefs(9) ) + ( X(5)*coefs(10) ) + ( coefs(6)*X(4) )  ];
 
 dt = 1;
-for k=1:N-1      % loop over control intervals
-                
+
+for k = 1:N-1 
+
 % Runge-Kutta 4 integration
 
-   k1 = f(X(:,k),         coefs(:,k));
-   k2 = f(X(:,k)+dt/2*k1, coefs(:,k));
-   k3 = f(X(:,k)+dt/2*k2, coefs(:,k));
-   k4 = f(X(:,k)+dt*k3,   coefs(:,k));
+   k1 = f(X(:,k),         coefs(:,k),  q(:,k));
+   k2 = f(X(:,k)+dt/2*k1, coefs(:,k),  q(:,k));
+   k3 = f(X(:,k)+dt/2*k2, coefs(:,k),  q(:,k));
+   k4 = f(X(:,k)+dt*k3,   coefs(:,k),  q(:,k));
    x_next = X(:,k) + dt/6*(k1+2*k2+2*k3+k4);
    opti.subject_to(X(:,k+1) == x_next); % close the gaps
 
 end
+
 
 %% Actual Optimization Simulation
 
@@ -446,7 +469,7 @@ save(filename, 'Opti_results');
 %% Comparison Plot
 
 % Susceptible - S 
- figure(1)
+figure(1)
 plot(new_time, upsampled_DataArray{1,:}, LineWidth=1.5)
 hold on
 plot(new_time, SIDTTHE_trends.S, LineWidth=1.5)
@@ -685,7 +708,7 @@ title('\textbf{$\beta$ coefficient}','Interpreter','latex')
 grid on
 legend('Interpreter','latex')
 xlim([new_time(1), new_time(end)])
-ylim([4.8e-3, max(opti_coefficients.beta)*1.05])
+ylim([min(opti_coefficients.beta), max(opti_coefficients.beta)*1.05])
 set(gca, 'TickLabelInterpreter', 'Latex')
 
 
