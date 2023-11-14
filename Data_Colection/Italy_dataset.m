@@ -26,7 +26,9 @@ for ii = 1:window:size(dataset,1)
     pos_avg.data(ii) = mean(dataset.isolamento_domiciliare(ii:ii+ window-1));   % weekly average of Positive, detected, NOT THREATNED pop
     healed_avg.data(ii) = mean(dataset.guariti(ii:ii+ window-1));               % weekly average of healed pop
     dec_avg.data(ii) = mean(dataset.deceduti(ii:ii+ window-1));                 % weekly average of deceased pop
-    tests_avg(ii) = mean(dataset.diff_tamponi(ii:ii+ window-1));     
+    tests_avg(ii) = mean(dataset.diff_tamponi(ii:ii+ window-1));                % weekly avg of the tests
+
+    vax_avg(ii) = mean(dataset.(ii:ii+ window-1));        
 end
 
 
