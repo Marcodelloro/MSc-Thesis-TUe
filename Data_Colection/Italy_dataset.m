@@ -128,7 +128,7 @@ infected_avg.date = pos_avg.date;
 infected_avg.data = pos_avg.data .* ratio_undetected;
 
 % We are going to assume a ratio also between people that are healed and
-% diagnosed as the same rate for the infected non diaggnosed
+% diagnosed as the same rate for the infected non diagnosed
 
 heal_rate = healed_avg.data./pos_avg.data;
 heal_notdiag = heal_rate .* infected_avg.data;

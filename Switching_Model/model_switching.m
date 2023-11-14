@@ -30,8 +30,8 @@ function [model] = switching_pandemic(ODEs_0,coefs_0,ICUs)
     ODEs = [ S; I; D; T1; T2; H; E ] ;
     coefs = [ alpha; beta; gamma; delta1; delta2; epsi; tau1; tau2; sigma1; sigma2; lambda ] ;          
     
-    model.x0 = [ODEs_0' coefs_0'];
-    model.x = [ODEs' coefs'];
+    model.x0 = [ODEs_0];
+    model.x = [ODEs];
     
     %% Switching Functions
 

@@ -273,7 +273,7 @@ dd = 1; % days for how much the constraint will be removed
 % the different policies applied form the government
 
 % constraints NO VARIATION 
-for kk = 2:length(policy_idx)-1
+for kk = 1:length(policy_idx)-1
     for jj = policy_idx(kk)+dd:policy_idx(kk+1)-1
 
         opti.subject_to( alpha(1,jj + 1) == alpha(1,jj) )
@@ -284,6 +284,38 @@ for kk = 2:length(policy_idx)-1
 
     end
 end
+
+% Hard constraints on the variation of all the other coefficients
+
+% for yy = 1:399-1
+% 
+%     opti.subject_to( gamma(1,yy + 1) <= gamma(1,yy)*1.01 )
+%     opti.subject_to( gamma(1,yy + 1) >= gamma(1,yy)*0.99 )
+% 
+%     opti.subject_to( delta1(1,yy + 1) <= delta1(1,yy)*1.01 )
+%     opti.subject_to( delta1(1,yy + 1) >= delta1(1,yy)*0.99 )
+% 
+%     opti.subject_to( delta2(1,yy + 1) <= delta2(1,yy)*1.01 )
+%     opti.subject_to( delta2(1,yy + 1) >= delta2(1,yy)*0.99 )
+% 
+%     opti.subject_to( epsi(1,yy + 1) <= epsi(1,yy)*1.01 )
+%     opti.subject_to( epsi(1,yy + 1) >= epsi(1,yy)*0.99 )
+% 
+%     opti.subject_to( tau1(1,yy + 1) <= tau1(1,yy)*1.01 )
+%     opti.subject_to( tau1(1,yy + 1) >= tau1(1,yy)*0.99 )
+% 
+%     opti.subject_to( tau2(1,yy + 1) <= tau2(1,yy)*1.01 )
+%     opti.subject_to( tau2(1,yy + 1) >= tau2(1,yy)*0.99 )
+% 
+%     opti.subject_to( sigma1(1,yy + 1) <= sigma1(1,yy)*1.01 )
+%     opti.subject_to( sigma1(1,yy + 1) >= sigma1(1,yy)*0.99 )
+% 
+%     opti.subject_to( sigma2(1,jj + 1) <= sigma2(1,jj)*1.01 )
+%     opti.subject_to( sigma2(1,jj + 1) >= sigma2(1,jj)*0.99 )
+% 
+%     opti.subject_to( lambda(1,jj + 1) <= lambda(1,jj)*1.01 )
+%     opti.subject_to( lambda(1,jj + 1) >= lambda(1,jj)*0.99 )
+% end
 
 %---------------------------------------------------------------------
 
@@ -424,10 +456,14 @@ end
 w1 = 6;     % weight for the difference between data and model
 w2 = 10;     % weight for the integral cost 1 
 w3 = 1;     % weight for the integral cost 2
-w4 = 5;   % weight on coefficient smoothing 
+w4 = 20;   % weight on coefficient smoothing 
+
+% z_data = zscore(data_obj); % normalisation of the data by z-score method
 
 
-obj = sum((data_obj - X_obj).^2) * w1 + integral_cost1 * w2 + integral_cost2 * w3 + cost_matrix_obj * w4 ; 
+%  obj = sum((data_obj - X_obj).^2) * w1 + integral_cost1 * w2 + integral_cost2 * w3 + cost_matrix_obj * w4 ; 
+obj = sum(((data_obj - X_obj)./data_obj).^2)*0.01 + cost_matrix_obj*100 ;
+% obj = sum((z_data - X_obj).^2)*0.01 + cost_matrix_obj*200 ;
 
 opti.minimize(obj);
 p_opts = struct('expand', false);
@@ -469,6 +505,7 @@ save(filename, 'Opti_results');
 %% Comparison Plot
 
 % Susceptible - S 
+  
 figure(1)
 plot(new_time, upsampled_DataArray{1,:}, LineWidth=1.5)
 hold on
@@ -611,9 +648,9 @@ set(gca, 'TickLabelInterpreter', 'Latex')
 figure(11)
 plot(new_time, opti_coefficients.epsi, LineWidth=1.5)
 ylabel('Coefficients Values','Interpreter','latex')
-title('\textbf{Coefficient $\epsilon_2$}','Interpreter','latex')
+title('\textbf{Coefficient $\epsilon$}','Interpreter','latex')
 grid on
-legend('$\epsilon_2$','Interpreter','latex', 'Location','northeast')
+legend('$\epsilon$','Interpreter','latex', 'Location','northeast')
 xlim([new_time(1), new_time(end)])
 set(gca, 'TickLabelInterpreter', 'Latex')
 

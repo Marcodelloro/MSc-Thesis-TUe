@@ -11,7 +11,7 @@ load('/Users/marcodelloro/Desktop/Thesis/MSc-Thesis-TUe/Data_Colection/SIDTTHE_d
 load('/Users/marcodelloro/Desktop/Thesis/MSc-Thesis-TUe/Data_Colection/Tests_data.mat');
 
 N = 399;
-ICUs = 2000 ;
+ICUs = 2000;
 
 % Normalisation of loaded data so they add up to 1
 
@@ -159,8 +159,8 @@ model = model_switching(ODEs_0,coefs_0,ICUs);
 %% Simulation settings
 
 N_finite_elements = 1;  % Number of finite elements N_FE per control interval/stage
-T_sim = N;             % Length of the control horizon T in the OCP
-N_sim = N;             % This is the number of control intervals ns
+T_sim = N;              % Length of the control horizon T in the OCP
+N_sim = N;              % This is the number of control intervals ns
 
 problem_options.dcs_mode = 'Stewart';
 % problem_options.dcs_mode = 'Step';
@@ -170,11 +170,11 @@ problem_options.N_finite_elements = N_finite_elements;
 problem_options.N_sim = N_sim;
 solver_options.use_previous_solution_as_initial_guess = 1;
 
-model.f_q = (F - DataArray)^2;
+% model.f_q = (model.F - DataArray')^2;
 
 %% Call FESD Integrator
 
-integrator = NosnocIntegrator(model, problem_options, solver_options, [], []);
+integrator = NosnocIntegrator(model, problem_options, solver_options, [], [],options);
 [results,stats] = integrator.solve();
 
 %% Get variables into main workspace
