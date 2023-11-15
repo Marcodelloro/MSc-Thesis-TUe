@@ -6,8 +6,8 @@
 clc
 clear all
 
-load('/Users/marcodelloro/Desktop/Thesis/MSc-Thesis-TUe/Data_Colection/SIDTTHE_data.mat');
-load('/Users/marcodelloro/Desktop/Thesis/MSc-Thesis-TUe/Data_Colection/Tests_data.mat');
+load('/Users/marcodelloro/Desktop/Thesis/MSc-Thesis-TUe/Data_Collection/SIDTTHE_data.mat');
+load('/Users/marcodelloro/Desktop/Thesis/MSc-Thesis-TUe/Data_Collection/Tests_data.mat');
 
 addpath('/Users/marcodelloro/Downloads/casadi-3.6.3-osx64-matlab2018b')
 import casadi.*;
@@ -26,91 +26,17 @@ T2_data = SIDTTHE_data{4,1}.data / Npop;    % T2 group - ICUs (Severly Threatned
 H_data = SIDTTHE_data{6,1}.data / Npop;     % T2 group - Healed Population **
 E_data = SIDTTHE_data{5,1}.data / Npop;     % E group - Expired (Deceased) Population
 
-S_data = ones(length(I_data),1) - (I_data + D_data + T1_data + T2_data + H_data + E_data); 
+S_data = ones(length(I_data),1)' - (I_data + D_data + T1_data + T2_data + H_data + E_data); 
 
 % ** the groups I and H are based on strong assumptions and dark numbers estimates
 
-DataArray = {S_data, I_data, D_data, T1_data, T2_data, H_data, E_data};
+DataArray = {S_data ; I_data ; D_data ; T1_data ; T2_data ; H_data ; E_data };
 
 N = 399;
 
-%% Choice of the sampling method 
+data = cell2mat(DataArray);
 
-% Create a dialog box with three buttons
-dlgTitle = 'Sampling Method Selection';
-prompt = 'Select a sampling method:';
-options = {'57 points sampling', 'Latin Hypercube sampling', 'Full sampling'};
-defaultOption = options{1};
-
-selectedOption = questdlg(prompt, dlgTitle, options{:}, defaultOption);
-
-% Check which option the user selected
-if isempty(selectedOption)
-    % User canceled the dialog
-    disp('Sampling method selection canceled.');
-else
-    disp(['Selected option: ' selectedOption]);
-
-
-    % Perform the action based on the selected option - 57 qweekly sampling action
-    if strcmp(selectedOption, '57 points sampling')
-        
-        data = horzcat(DataArray{:})';
-
-    elseif strcmp(selectedOption, 'Latin Hypercube sampling')
-        
-        perc = 0.5;  % percentage of points we want to sample from the initial dataset
-        sampled_points = round(N*perc);
-        disp(['Sampling method LH - ' num2str(sampled_points) ' points.']);
-        
-        % New time vector (daily data)
-        new_time = linspace(SIDTTHE_data{1, 1}.date(1), SIDTTHE_data{1, 1}.date(end), N); % 399 data points (daily data)
-        
-        % Iterate over each cell in DataArray
-        for ii = 1:numel(DataArray)
-        
-            original_data = DataArray{1, ii};
-        
-            upsampled_DataArray{ii,1} = interp1(SIDTTHE_data{1, 1}.date, original_data, new_time);
-        
-        end
-        
-        N_new = sort( round(lhsdesign(sampled_points, 1) * N) );
-        
-        for ii=1:7
-            originalData = upsampled_DataArray{ii};
-            lhs_DataArray{ii,:} = originalData(N_new);
-        end
-
-        data = vertcat(lhs_DataArray{:});
-
-    elseif strcmp(selectedOption, 'Full sampling')
-  
-        % Upsampling of the dataset using Interp1, so that we can handle better the divided day by day 
-        
-        N = 399; % if we are using the DAILY time discretization, then N = 399
-                 % else is N = 57 (weekly)
-        
-        % New time vector (daily data)
-        new_time = linspace(SIDTTHE_data{1, 1}.date(1), SIDTTHE_data{1, 1}.date(end), N); % 399 data points (daily data)
-        
-        % Iterate over each cell in DataArray
-        for ii = 1:numel(DataArray)
-        
-            original_data = DataArray{1, ii};
-        
-            upsampled_DataArray{ii,1} = interp1(SIDTTHE_data{1, 1}.date, original_data, new_time);
-            tests = interp1(SIDTTHE_data{1, 1}.date, tests_avg, new_time);
-        
-        end
-
-         data = vertcat(upsampled_DataArray{:});
-
-    else
-        disp('Invalid selection.');
-    end
-end
-
+new_time = date;
 
 %% Setting of the optimization variables
 
@@ -139,7 +65,6 @@ H = opti.variable(1,N);
 E = opti.variable(1,N);
 
 X = [S; I; D; T1; T2; H; E]; % state trajectory
-
 
 % Initial conditions for the various parameters
 
@@ -351,35 +276,15 @@ end
 %% RK45 simulation of the differential equations
 
 % Specify system dynamics - creation of the handle functions
-%% Version 1 switch 
 
-q = opti.variable(1,N);
-
-for kk = 1:N 
-
-    if upsampled_DataArray{5,1}(kk) <= ICUs
-        q(kk) = 0;
-    else
-        q(kk) = 1;
-    end
-end
-
-
-
-f = @(X, coefs, q)       (1 - q) * [ -X(1)*(coefs(1)*X(2) + coefs(2)*X(3));                                                 % dS/dt = S_dot 
+f = @(X, coefs, q)            [ -X(1)*(coefs(1)*X(2) + coefs(2)*X(3));                                                 % dS/dt = S_dot 
                               ( X(1)*(coefs(1)*X(2) + coefs(2)*X(3)) ) - ( (coefs(3) + coefs(11))*X(2) );             % dI/dt = I_dot
                               (X(2)*coefs(3)) - ( X(3)*(coefs(11) + coefs(4) + coefs(5)) );                           % dD/dt = D_dot
                               ( coefs(4)*X(3) ) - ( (coefs(7) + coefs(9) + coefs(6))*X(4) );                            % dT1/dt = T1_dot
                               ( coefs(5)*X(3) ) - ( (coefs(8) + coefs(10))*X(5) ) + ( coefs(6)*X(4) );                  % dT2/dt = T2_dot
                               ( (X(2) + X(3))*coefs(11) ) + ( X(4)*coefs(7) ) + ( X(5)*coefs(8) ) ;                       % dH/dt = H_dot
-                              ( X(4)*coefs(9) ) + ( X(5)*coefs(10) ) ] + ...
-                              q * [ -X(1)*(coefs(1)*X(2) + coefs(2)*X(3));                                                 % dS/dt = S_dot 
-                              ( X(1)*(coefs(1)*X(2) + coefs(2)*X(3)) ) - ( (coefs(3) + coefs(11))*X(2) );             % dI/dt = I_dot
-                              (X(2)*coefs(3)) - ( X(3)*(coefs(11) + coefs(4) + coefs(5)) );                           % dD/dt = D_dot
-                              ( coefs(4)*X(3) ) - ( (coefs(7) + coefs(9) + coefs(6))*X(4) );                            % dT1/dt = T1_dot
-                              ( coefs(5)*X(3) ) - ( (coefs(8) + coefs(10))*X(5) );                  % dT2/dt = T2_dot
-                              ( (X(2) + X(3))*coefs(11) ) + ( X(4)*coefs(7) ) + ( X(5)*coefs(8) ) ;                       % dH/dt = H_dot
-                              ( X(4)*coefs(9) ) + ( X(5)*coefs(10) ) + ( coefs(6)*X(4) )  ];
+                              ( X(4)*coefs(9) ) + ( X(5)*coefs(10) ) ];
+                             
 
 dt = 1;
 
@@ -387,10 +292,10 @@ for k = 1:N-1
 
 % Runge-Kutta 4 integration
 
-   k1 = f(X(:,k),         coefs(:,k),  q(:,k));
-   k2 = f(X(:,k)+dt/2*k1, coefs(:,k),  q(:,k));
-   k3 = f(X(:,k)+dt/2*k2, coefs(:,k),  q(:,k));
-   k4 = f(X(:,k)+dt*k3,   coefs(:,k),  q(:,k));
+   k1 = f(X(:,k),         coefs(:,k));
+   k2 = f(X(:,k)+dt/2*k1, coefs(:,k));
+   k3 = f(X(:,k)+dt/2*k2, coefs(:,k));
+   k4 = f(X(:,k)+dt*k3,   coefs(:,k));
    x_next = X(:,k) + dt/6*(k1+2*k2+2*k3+k4);
    opti.subject_to(X(:,k+1) == x_next); % close the gaps
 
@@ -399,31 +304,9 @@ end
 
 %% Actual Optimization Simulation
 
-data_obj = horzcat(data(:));
-X_obj = [];
+data_obj = horzcat(data(:)); 
+X_obj = horzcat(X(:));
 
-% differentiation of X_obj depending on the different sampling methods
-if strcmp(selectedOption, '57 points sampling')
-    idx = 7:7:N;
-    idx = [1 idx];
-
-    for ii=1:7
-        X_obj = [X_obj horzcat(X(ii,idx))]';
-    end
-
-elseif strcmp(selectedOption, 'Latin Hypercube sampling')
-    
-    for ii=1:7
-        X_obj = [X_obj horzcat(X(ii,N_new))];
-    end
-    
-    X_obj = X_obj';
-
-elseif strcmp(selectedOption, 'Full sampling')
-    
-    X_obj = horzcat(X(:));
-
-end
 
 % building the actual COST FUNCTIONS to ensure smoothing of unconstrained coefs
 
@@ -507,7 +390,7 @@ save(filename, 'Opti_results');
 % Susceptible - S 
   
 figure(1)
-plot(new_time, upsampled_DataArray{1,:}, LineWidth=1.5)
+plot(new_time, DataArray{1,:}, LineWidth=1.5)
 hold on
 plot(new_time, SIDTTHE_trends.S, LineWidth=1.5)
 ylabel('$\char"0023$ of cases','Interpreter','latex')
@@ -520,7 +403,7 @@ set(gca, 'TickLabelInterpreter', 'Latex')
 
 % Infected - I
 figure(2)
-plot(new_time, upsampled_DataArray{2,:}, LineWidth=1.5)
+plot(new_time, DataArray{2,:}, LineWidth=1.5)
 hold on
 plot(new_time, SIDTTHE_trends.I, LineWidth=1.5)
 ylabel('$\char"0023$ of cases','Interpreter','latex')
@@ -533,7 +416,7 @@ set(gca, 'TickLabelInterpreter', 'Latex')
 
 % Diagnosed - D
 figure(3)
-plot(new_time, upsampled_DataArray{3,:}, LineWidth=1.5)
+plot(new_time, DataArray{3,:}, LineWidth=1.5)
 hold on
 plot(new_time, SIDTTHE_trends.D, LineWidth=1.5)
 ylabel('$\char"0023$ of cases','Interpreter','latex')
@@ -546,7 +429,7 @@ set(gca, 'TickLabelInterpreter', 'Latex')
 
 % Lightly Threatned - T1
 figure(4)
-plot(new_time, upsampled_DataArray{4,:}, LineWidth=1.5)
+plot(new_time, DataArray{4,:}, LineWidth=1.5)
 hold on
 plot(new_time, SIDTTHE_trends.T1, LineWidth=1.5)
 ylabel('$\char"0023$ of cases','Interpreter','latex')
@@ -559,7 +442,7 @@ set(gca, 'TickLabelInterpreter', 'Latex')
 
 % ICU / Heavily Threatned - T2
 figure(5)
-plot(new_time, upsampled_DataArray{5,:}, LineWidth=1.5)
+plot(new_time, DataArray{5,:}, LineWidth=1.5)
 hold on
 plot(new_time, SIDTTHE_trends.T2, LineWidth=1.5)
 ylabel('$\char"0023$ of cases','Interpreter','latex')
@@ -572,7 +455,7 @@ set(gca, 'TickLabelInterpreter', 'Latex')
 
 % Healed - H
 figure(6)
-plot(new_time, upsampled_DataArray{6,:}, LineWidth=1.5)
+plot(new_time, DataArray{6,:}, LineWidth=1.5)
 hold on
 plot(new_time, SIDTTHE_trends.H, LineWidth=1.5)
 ylabel('$\char"0023$ of cases','Interpreter','latex')
@@ -585,7 +468,7 @@ set(gca, 'TickLabelInterpreter', 'Latex')
 
 % Deceased - E
 figure(7)
-plot(new_time, upsampled_DataArray{7,:}, LineWidth=1.5)
+plot(new_time, DataArray{7,:}, LineWidth=1.5)
 hold on
 plot(new_time, SIDTTHE_trends.E, LineWidth=1.5)
 ylabel('$\char"0023$ of cases','Interpreter','latex')
