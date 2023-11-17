@@ -683,7 +683,7 @@ ax1 = gca;
 ax1.YColor = 'k';
 % second data set on the secondary y-axis
 yyaxis right;
-plot(new_time, tests./Npop,'-.','LineWidth',1.5,'DisplayName', 'Testing Activity')
+plot(new_time, tests.data/Npop,'-.','LineWidth',1.5,'DisplayName', 'Testing Activity')
 ylabel('$\char"0023$ of Tests','Interpreter','latex')
 ax2 = gca;
 ax2.YColor = 'k';
@@ -691,3 +691,177 @@ title('\textbf{Comparison Testing Activity and $\gamma$ Coefficient}','Interpret
 legend(' $\gamma$', 'Tests','Interpreter','latex')
 grid on;
 xlim([new_time(1), new_time(end)])
+
+%% Variants and coefficients 
+
+load("/Users/marcodelloro/Desktop/Thesis/MSc-Thesis-TUe/Data_Collection/Smooth_Variants.mat")
+
+% Alpha and Variants
+figure()
+yyaxis right;
+fill([SmoothVar.date; flip(SmoothVar.date)], [SmoothVar.SC2 zeros(1,57)], [0 0.4470 0.7410], 'LineStyle', '-','FaceAlpha',.1,'EdgeColor', [0 0.4470 0.7410])
+hold on
+fill([SmoothVar.date; flip(SmoothVar.date)], [SmoothVar.alpha zeros(1,57)], [0.8500 0.3250 0.0980], 'LineStyle', '-', 'FaceAlpha',.1,'EdgeColor', [0.8500 0.3250 0.0980])
+hold on 
+fill([SmoothVar.date; flip(SmoothVar.date)], [SmoothVar.gamma zeros(1,57)], [0.9290 0.6940 0.1250], 'LineStyle', '-', 'FaceAlpha',.1,'EdgeColor', [0.9290 0.6940 0.1250])
+hold on
+fill([SmoothVar.date; flip(SmoothVar.date)], [SmoothVar.delta zeros(1,57)], [0.4940 0.1840 0.5560], 'LineStyle', '-', 'FaceAlpha',.1,'EdgeColor', [0.4940 0.1840 0.5560])
+ax2 = gca;
+ax2.YColor = 'k';
+yyaxis left;
+plot(new_time, opti_coefficients.alpha, 'k','LineWidth', 2);
+ylabel('$\beta$ Coefficient Values','Interpreter','latex')
+ax1 = gca;
+ax1.YColor = 'k';
+title('\textbf{}','Interpreter','latex')
+title('\textbf{SARS-CoV-2 Variants - Coefficient $\alpha$}','Interpreter','latex')
+legend('$\alpha$','SARS-CoV-2', 'B.1.1.7 - ALPHA VARIANT', 'P.1 - GAMMA VARIANT', ' B.1.617.2 - DELTA VARIANT', 'Interpreter','latex','Location','northeastoutside')
+grid on
+xlim([SmoothVar.date(1), SmoothVar.date(end)])
+
+% Beta and Variants
+figure()
+yyaxis right;
+fill([SmoothVar.date; flip(SmoothVar.date)], [SmoothVar.SC2 zeros(1,57)], [0 0.4470 0.7410], 'LineStyle', '-','FaceAlpha',.1,'EdgeColor', [0 0.4470 0.7410])
+hold on
+fill([SmoothVar.date; flip(SmoothVar.date)], [SmoothVar.alpha zeros(1,57)], [0.8500 0.3250 0.0980], 'LineStyle', '-', 'FaceAlpha',.1,'EdgeColor', [0.8500 0.3250 0.0980])
+hold on 
+fill([SmoothVar.date; flip(SmoothVar.date)], [SmoothVar.gamma zeros(1,57)], [0.9290 0.6940 0.1250], 'LineStyle', '-', 'FaceAlpha',.1,'EdgeColor', [0.9290 0.6940 0.1250])
+hold on
+fill([SmoothVar.date; flip(SmoothVar.date)], [SmoothVar.delta zeros(1,57)], [0.4940 0.1840 0.5560], 'LineStyle', '-', 'FaceAlpha',.1,'EdgeColor', [0.4940 0.1840 0.5560])
+ax2 = gca;
+ax2.YColor = 'k';
+yyaxis left;
+plot(new_time, opti_coefficients.beta, 'k','LineWidth', 2);
+ylabel('$\beta$ Coefficient Values','Interpreter','latex')
+ax1 = gca;
+ax1.YColor = 'k';
+title('\textbf{}','Interpreter','latex')
+title('\textbf{SARS-CoV-2 Variants - Coefficient $\beta$}','Interpreter','latex')
+legend('$\beta$','SARS-CoV-2', 'B.1.1.7 - ALPHA VARIANT', 'P.1 - GAMMA VARIANT', ' B.1.617.2 - DELTA VARIANT', 'Interpreter','latex','Location','northeastoutside')
+grid on
+xlim([SmoothVar.date(1), SmoothVar.date(end)])
+
+
+% Deltas and Variants
+figure()
+yyaxis right;
+fill([SmoothVar.date; flip(SmoothVar.date)], [SmoothVar.SC2 zeros(1,57)], [0 0.4470 0.7410], 'LineStyle', '-','FaceAlpha',.1,'EdgeColor', [0 0.4470 0.7410])
+hold on
+fill([SmoothVar.date; flip(SmoothVar.date)], [SmoothVar.alpha zeros(1,57)], [0.8500 0.3250 0.0980], 'LineStyle', '-', 'FaceAlpha',.1,'EdgeColor', [0.8500 0.3250 0.0980])
+hold on 
+fill([SmoothVar.date; flip(SmoothVar.date)], [SmoothVar.gamma zeros(1,57)], [0.9290 0.6940 0.1250], 'LineStyle', '-', 'FaceAlpha',.1,'EdgeColor', [0.9290 0.6940 0.1250])
+hold on
+fill([SmoothVar.date; flip(SmoothVar.date)], [SmoothVar.delta zeros(1,57)], [0.4940 0.1840 0.5560], 'LineStyle', '-', 'FaceAlpha',.1,'EdgeColor', [0.4940 0.1840 0.5560])
+ax2 = gca;
+ax2.YColor = 'k';
+yyaxis left;
+plot(new_time, opti_coefficients.delta1, 'k-', LineWidth=2)
+hold on
+plot(new_time, opti_coefficients.delta2, 'r-', LineWidth=2)
+ylabel('$\beta$ Coefficient Values','Interpreter','latex')
+ax1 = gca;
+ax1.YColor = 'k';
+title('\textbf{}','Interpreter','latex')
+title('\textbf{SARS-CoV-2 Variants - Coefficient $\delta$}','Interpreter','latex')
+legend('$\delta_1$','$\delta_2$','SARS-CoV-2', 'B.1.1.7 - ALPHA VARIANT', 'P.1 - GAMMA VARIANT', ' B.1.617.2 - DELTA VARIANT', 'Interpreter','latex','Location','northeastoutside')
+grid on
+xlim([SmoothVar.date(1), SmoothVar.date(end)])
+
+% Sigmas and Variants
+figure()
+yyaxis right;
+fill([SmoothVar.date; flip(SmoothVar.date)], [SmoothVar.SC2 zeros(1,57)], [0 0.4470 0.7410], 'LineStyle', '-','FaceAlpha',.1,'EdgeColor', [0 0.4470 0.7410])
+hold on
+fill([SmoothVar.date; flip(SmoothVar.date)], [SmoothVar.alpha zeros(1,57)], [0.8500 0.3250 0.0980], 'LineStyle', '-', 'FaceAlpha',.1,'EdgeColor', [0.8500 0.3250 0.0980])
+hold on 
+fill([SmoothVar.date; flip(SmoothVar.date)], [SmoothVar.gamma zeros(1,57)], [0.9290 0.6940 0.1250], 'LineStyle', '-', 'FaceAlpha',.1,'EdgeColor', [0.9290 0.6940 0.1250])
+hold on
+fill([SmoothVar.date; flip(SmoothVar.date)], [SmoothVar.delta zeros(1,57)], [0.4940 0.1840 0.5560], 'LineStyle', '-', 'FaceAlpha',.1,'EdgeColor', [0.4940 0.1840 0.5560])
+ax2 = gca;
+ax2.YColor = 'k';
+yyaxis left;
+plot(new_time, opti_coefficients.sigma1, 'k-', LineWidth=2)
+hold on
+plot(new_time, opti_coefficients.sigma2, 'r-', LineWidth=2)
+ylabel('$\sigma$ Coefficient Values','Interpreter','latex')
+ax1 = gca;
+ax1.YColor = 'k';
+title('\textbf{}','Interpreter','latex')
+title('\textbf{SARS-CoV-2 Variants - Coefficient $\sigma$}','Interpreter','latex')
+legend('$\sigma_1$','$\sigma_2$','SARS-CoV-2', 'B.1.1.7 - ALPHA VARIANT', 'P.1 - GAMMA VARIANT', ' B.1.617.2 - DELTA VARIANT', 'Interpreter','latex','Location','northeastoutside')
+grid on
+xlim([SmoothVar.date(1), SmoothVar.date(end)])
+
+
+% Taus and Variants
+figure()
+yyaxis right;
+fill([SmoothVar.date; flip(SmoothVar.date)], [SmoothVar.SC2 zeros(1,57)], [0 0.4470 0.7410], 'LineStyle', '-','FaceAlpha',.1,'EdgeColor', [0 0.4470 0.7410])
+hold on
+fill([SmoothVar.date; flip(SmoothVar.date)], [SmoothVar.alpha zeros(1,57)], [0.8500 0.3250 0.0980], 'LineStyle', '-', 'FaceAlpha',.1,'EdgeColor', [0.8500 0.3250 0.0980])
+hold on 
+fill([SmoothVar.date; flip(SmoothVar.date)], [SmoothVar.gamma zeros(1,57)], [0.9290 0.6940 0.1250], 'LineStyle', '-', 'FaceAlpha',.1,'EdgeColor', [0.9290 0.6940 0.1250])
+hold on
+fill([SmoothVar.date; flip(SmoothVar.date)], [SmoothVar.delta zeros(1,57)], [0.4940 0.1840 0.5560], 'LineStyle', '-', 'FaceAlpha',.1,'EdgeColor', [0.4940 0.1840 0.5560])
+ax2 = gca;
+ax2.YColor = 'k';
+yyaxis left;
+plot(new_time, opti_coefficients.tau1, 'k-', LineWidth=2)
+hold on
+plot(new_time, opti_coefficients.tau2, 'r-', LineWidth=2)
+ylabel('$\beta$ Coefficient Values','Interpreter','latex')
+ax1 = gca;
+ax1.YColor = 'k';
+title('\textbf{}','Interpreter','latex')
+title('\textbf{SARS-CoV-2 Variants - Coefficient $\tau$}','Interpreter','latex')
+legend('$\tau_1$','$\tau_2$','SARS-CoV-2', 'B.1.1.7 - ALPHA VARIANT', 'P.1 - GAMMA VARIANT', ' B.1.617.2 - DELTA VARIANT', 'Interpreter','latex','Location','northeastoutside')
+grid on
+xlim([SmoothVar.date(1), SmoothVar.date(end)])
+
+
+% Lambda and Variants
+figure()
+yyaxis right;
+fill([SmoothVar.date; flip(SmoothVar.date)], [SmoothVar.SC2 zeros(1,57)], [0 0.4470 0.7410], 'LineStyle', '-','FaceAlpha',.1,'EdgeColor', [0 0.4470 0.7410])
+hold on
+fill([SmoothVar.date; flip(SmoothVar.date)], [SmoothVar.alpha zeros(1,57)], [0.8500 0.3250 0.0980], 'LineStyle', '-', 'FaceAlpha',.1,'EdgeColor', [0.8500 0.3250 0.0980])
+hold on 
+fill([SmoothVar.date; flip(SmoothVar.date)], [SmoothVar.gamma zeros(1,57)], [0.9290 0.6940 0.1250], 'LineStyle', '-', 'FaceAlpha',.1,'EdgeColor', [0.9290 0.6940 0.1250])
+hold on
+fill([SmoothVar.date; flip(SmoothVar.date)], [SmoothVar.delta zeros(1,57)], [0.4940 0.1840 0.5560], 'LineStyle', '-', 'FaceAlpha',.1,'EdgeColor', [0.4940 0.1840 0.5560])
+ax2 = gca;
+ax2.YColor = 'k';
+yyaxis left;
+plot(new_time, opti_coefficients.lambda, 'k','LineWidth', 2);
+ylabel('$\lambda$ Coefficient Values','Interpreter','latex')
+ax1 = gca;
+ax1.YColor = 'k';
+title('\textbf{}','Interpreter','latex')
+title('\textbf{SARS-CoV-2 Variants - Coefficient $\lambda$}','Interpreter','latex')
+legend('$\lambda$','SARS-CoV-2', 'B.1.1.7 - ALPHA VARIANT', 'P.1 - GAMMA VARIANT', ' B.1.617.2 - DELTA VARIANT', 'Interpreter','latex','Location','northeastoutside')
+grid on
+xlim([SmoothVar.date(1), SmoothVar.date(end)])
+
+% Epsi and Variants
+figure()
+yyaxis right;
+fill([SmoothVar.date; flip(SmoothVar.date)], [SmoothVar.SC2 zeros(1,57)], [0 0.4470 0.7410], 'LineStyle', '-','FaceAlpha',.1,'EdgeColor', [0 0.4470 0.7410])
+hold on
+fill([SmoothVar.date; flip(SmoothVar.date)], [SmoothVar.alpha zeros(1,57)], [0.8500 0.3250 0.0980], 'LineStyle', '-', 'FaceAlpha',.1,'EdgeColor', [0.8500 0.3250 0.0980])
+hold on 
+fill([SmoothVar.date; flip(SmoothVar.date)], [SmoothVar.gamma zeros(1,57)], [0.9290 0.6940 0.1250], 'LineStyle', '-', 'FaceAlpha',.1,'EdgeColor', [0.9290 0.6940 0.1250])
+hold on
+fill([SmoothVar.date; flip(SmoothVar.date)], [SmoothVar.delta zeros(1,57)], [0.4940 0.1840 0.5560], 'LineStyle', '-', 'FaceAlpha',.1,'EdgeColor', [0.4940 0.1840 0.5560])
+ax2 = gca;
+ax2.YColor = 'k';
+yyaxis left;
+plot(new_time, opti_coefficients.epsi, 'k','LineWidth', 2);
+ylabel('$\beta$ Coefficient Values','Interpreter','latex')
+ax1 = gca;
+ax1.YColor = 'k';
+title('\textbf{}','Interpreter','latex')
+title('\textbf{SARS-CoV-2 Variants - Coefficient $\epsilon$}','Interpreter','latex')
+legend('$\epsilon$','SARS-CoV-2', 'B.1.1.7 - ALPHA VARIANT', 'P.1 - GAMMA VARIANT', ' B.1.617.2 - DELTA VARIANT', 'Interpreter','latex','Location','northeastoutside')
+grid on
+xlim([SmoothVar.date(1), SmoothVar.date(end)])

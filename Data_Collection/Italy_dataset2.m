@@ -352,9 +352,23 @@ for ii = 1:size(customColors, 1)
 end
 ylabel('$\%$ Variant','Interpreter','latex')
 title('\textbf{SARS-CoV-2 Variants in The Netherlands}','Interpreter','latex')
-legend('SARS-CoV-2', 'B.1.351', 'B.1.617.2 - DELTA VARIANT', 'B.1.1.7 - ALPHA VARIANT', 'B.1.427/B.1.429', 'B.1.525', 'B.1.620', 'B.1.621', 'BA.1 - OMICRON BA1 VARIANT', 'BA.2 - OMICRON BA2 VARIANT', 'C.37', 'P.1 - GAMMA VARIANT', 'Interpreter','latex','Location','northeastoutside')
+legend('SARS-CoV-2', 'B.1.351', ' B.1.617.2 - DELTA VARIANT', 'B.1.1.7 - ALPHA VARIANT', 'B.1.427/B.1.429', 'B.1.525', 'B.1.620', 'B.1.621', 'BA.1 - OMICRON BA1 VARIANT', 'BA.2 - OMICRON BA2 VARIANT', 'C.37', 'P.1 - GAMMA VARIANT', 'Interpreter','latex','Location','northeastoutside')
 xlim([variants.date(1), variants.date(end)])
 ylim([0,100.1])
 set(gca, 'TickLabelInterpreter', 'Latex')
 
+% Smoothing of Most importat variants to have a "Variants Plot"
 
+% Cubic smoothing 
+
+xii = [0:1:56];
+
+SmoothVar.date = variants.date;
+SmoothVar.SC2 = csaps(xii,variants.Other,p,xii);
+SmoothVar.alpha = csaps(xii,variants.("B.1.1.7"),p,xii);
+SmoothVar.gamma = csaps(xii,variants.("P.1"),p,xii);
+SmoothVar.delta = csaps(xii,variants.("B.1.617.2"),p,xii);
+
+% save of the data from Testing activities
+filename = 'Smooth_Variants.mat';
+save(filename, 'SmoothVar'); 
