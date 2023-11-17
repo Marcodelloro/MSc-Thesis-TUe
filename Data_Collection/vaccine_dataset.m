@@ -26,7 +26,8 @@ vax21 = groupsummary(vaxRaw21, 'data', 'sum');
 vax_tot = [table2array(vax20(:,3:end)); table2array(vax21(1:276,3:end))];
 missing_days = 399 - size(vax_tot,1);
 
-wait_period = zeros(missing_days,4);
+% wait_period = zeros(missing_days,4);
+% wait_period = ones(missing_days,4) * 0.1;
 
 vax_tot = [wait_period; vax_tot];
 

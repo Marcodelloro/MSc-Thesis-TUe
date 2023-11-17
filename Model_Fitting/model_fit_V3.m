@@ -1,7 +1,8 @@
 %% Version with VACCINES - Closer to the final model
 
 % This version of the model should contain also the data coming from
-% vaccinated individuals , the model is SIDDTHE-V model
+% vaccinated individuals , the model is SIDDTHE-V model - MOD with
+% POPULATION COMING FROM H and S 
 
 clc
 clear all
@@ -23,10 +24,10 @@ I_data = SIDTTHE_data{1,1}.data / Npop;     % I group - Infected Population **
 D_data = SIDTTHE_data{2,1}.data / Npop;     % D group - Diagnosed Population
 T1_data = SIDTTHE_data{3,1}.data / Npop;    % T1 group - Hospitalised (Lightly Threatned) Population
 T2_data = SIDTTHE_data{4,1}.data / Npop;    % T2 group - ICUs (Severly Threatned) Population
-H_data = SIDTTHE_data{6,1}.data / Npop;     % T2 group - Healed Population **
-E_data = SIDTTHE_data{5,1}.data / Npop;     % E group - Expired (Deceased) Population
+H_data = (SIDTTHE_data{6,1}.data - vaxData.sum_dpi') / Npop;     % T2 group - Healed Population **
+E_data = SIDTTHE_data{5,1}.data  / Npop;     % E group - Expired (Deceased) Population
 V_data = (vaxData.sum_d2 + vaxData.sum_dpi)' / Npop;
-S_data = ones(length(I_data),1)' - (I_data + D_data + T1_data + T2_data + H_data + E_data + V_data); 
+S_data = ones(length(I_data),1)' - (I_data + D_data + T1_data + T2_data + H_data + E_data + V_data ); 
 
 % ** the groups I and H are based on strong assumptions and dark numbers estimates
 
@@ -53,8 +54,9 @@ tau1 = opti.variable(1,N);    % tau 1 - coefficient to go from T1 to E
 tau2 = opti.variable(1,N);    % tau 2 - coefficient to go from T2 to E
 lambda = opti.variable(1,N);  % lambda - coefficient to go from I and D to H
 phi = opti.variable(1,N);  % phi - coefficient to go from S to V
+kappa = opti.variable(1,N); % phi - coefficient to go from H to V
 
-coefs = [alpha; beta; gamma; delta1; delta2; epsi; sigma1; sigma2; tau1; tau2; lambda; phi];
+coefs = [alpha; beta; gamma; delta1; delta2; epsi; sigma1; sigma2; tau1; tau2; lambda; phi; kappa];
 
 % Lifting Variables
 
@@ -260,9 +262,9 @@ f = @(X, coefs, q)            [ -X(1)*(coefs(1)*X(2) + coefs(2)*X(3)) - X(1)*coe
                               (X(2)*coefs(3)) - ( X(3)*(coefs(11) + coefs(4) + coefs(5)) );                           % dD/dt = D_dot
                               ( coefs(4)*X(3) ) - ( (coefs(7) + coefs(9) + coefs(6))*X(4) );                            % dT1/dt = T1_dot
                               ( coefs(5)*X(3) ) - ( (coefs(8) + coefs(10))*X(5) ) + ( coefs(6)*X(4) );                  % dT2/dt = T2_dot
-                              ( (X(2) + X(3))*coefs(11) ) + ( X(4)*coefs(7) ) + ( X(5)*coefs(8) ) ;                       % dH/dt = H_dot
+                              ( (X(2) + X(3))*coefs(11) ) + ( X(4)*coefs(7) ) + ( X(5)*coefs(8) ) - X(6)*coefs(13) ;                       % dH/dt = H_dot
                               ( X(4)*coefs(9) ) + ( X(5)*coefs(10) );
-                                X(1)*coefs(12) ];
+                                X(1)*coefs(12) + X(6)*coefs(13) ];
                              
 
 dt = 1;
@@ -304,10 +306,11 @@ coefs_matrix_obj = [    sum( ( (diff(coefs(3,:)))./0.5).^2 );
                         sum( ( (diff(coefs(9,:)))./0.03).^2 );
                         sum( ( (diff(coefs(10,:)))./0.05).^2 );
                         sum( ( (diff(coefs(11,:)))./0.5 ).^2);     
-                        sum( ( (diff(coefs(12,:)))./0.5 ).^2);    ];
+                        sum( ( (diff(coefs(12,:)))./0.5 ).^2);  
+                        sum( ( (diff(coefs(13,:)))./0.5 ).^2)     ];
 
 cost_matrix_obj =  coefs_matrix_obj(1) + coefs_matrix_obj(2) + coefs_matrix_obj(3) + coefs_matrix_obj(4) + coefs_matrix_obj(5) +...
-                   coefs_matrix_obj(6) + coefs_matrix_obj(7) +  coefs_matrix_obj(8) + coefs_matrix_obj(9) +  coefs_matrix_obj(10);
+                   coefs_matrix_obj(6) + coefs_matrix_obj(7) +  coefs_matrix_obj(8) + coefs_matrix_obj(9) +  coefs_matrix_obj(10) + coefs_matrix_obj(11);
 
 
 integral_cost1= 0; % initialization of the integral cost for Hosipitalised
@@ -344,7 +347,7 @@ sol = opti.solve();   % actual solver
 
 % Table of the coefficients
 
-column_names = {'alpha', 'beta', 'gamma', 'delta1', 'delta2', 'epsi', 'sigma1', 'sigma2', 'tau1', 'tau2', 'lambda','phi'};
+column_names = {'alpha', 'beta', 'gamma', 'delta1', 'delta2', 'epsi', 'sigma1', 'sigma2', 'tau1', 'tau2', 'lambda','phi','kappa'};
 opti_coefficients = array2table(opti.debug.value(coefs)', 'VariableNames', column_names);
 
 % Trends of every group SIDTTHE
@@ -580,6 +583,16 @@ ylabel('Coefficients Values','Interpreter','latex')
 title('\textbf{Coefficient $\phi$}','Interpreter','latex')
 grid on
 legend('$\phi$', 'Interpreter','latex', 'Location','northeast')
+xlim([new_time(1), new_time(end)])
+set(gca, 'TickLabelInterpreter', 'Latex')
+
+% Coefficient kappa
+figure(15)
+plot(new_time, opti_coefficients.kappa, LineWidth=1.5)
+ylabel('Coefficients Values','Interpreter','latex')
+title('\textbf{Coefficient $\kappa$}','Interpreter','latex')
+grid on
+legend('$\kappa$', 'Interpreter','latex', 'Location','northeast')
 xlim([new_time(1), new_time(end)])
 set(gca, 'TickLabelInterpreter', 'Latex')
 
