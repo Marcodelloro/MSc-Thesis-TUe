@@ -83,7 +83,8 @@ opti.set_initial(E,ones(N,1) * data(7,1));
 opti.set_initial(V,ones(N,1) * data(8,1));
 
 opti.set_initial(alpha,ones(N,1) * 0.513);          % All coeff. are obtained from the mean of the values provided by G.Giordano in original SIDARTHE paper
-opti.set_initial(beta,ones(N,1) * 0.011); 
+% opti.set_initial(beta,ones(N,1) * 0.011);
+opti.set_initial(beta,ones(N,1) * 1e-6);
 opti.set_initial(gamma,ones(N,1) * 0.2405);
 opti.set_initial(delta1,ones(N,1) * 0.005);
 opti.set_initial(delta2,ones(N,1) * 0.001);
@@ -106,8 +107,10 @@ opti.subject_to(alpha(1:end) <= 0.6);
 
 % Beta parameter - bound on beta value (different bound for different months)
 
-opti.subject_to(beta(1:end) >= 0);
-opti.subject_to(beta(1:end) <= 0.015);
+% opti.subject_to(beta(1:end) >= 0);
+% opti.subject_to(beta(1:end) <= 0.015);
+
+opti.subject_to(beta(1:end) == 1e-6);
 
 % Gamma parameter - bound on gamma value (different bound for different months)
 
@@ -152,6 +155,7 @@ opti.subject_to(lambda(1:end) <= 0.2);
 % phi parameter - bound on phi value (different bound for different months)
 
 opti.subject_to(phi(1:end) >= 0);   % bound on phi value
+opti.subject_to(kappa(1:end) >= 0);   % bound on phi value
 
 
 % Initial Conditions constraints on ODEs
@@ -223,8 +227,8 @@ for kk = 1:length(policy_idx)-1
 end
 
 %---------------------------------------------------------------------
-
-% constraints WITH VARIATION 
+% 
+% % constraints WITH VARIATION 
 % for kk = 2:length(policy_idx)-1
 %     for jj = policy_idx(kk)+dd:policy_idx(kk+1)-1
 % 
@@ -244,14 +248,20 @@ for jj = 1:policy_idx(2)-1
     opti.subject_to( alpha(1,jj + 1) <= alpha(1,jj)*1.01 )
     opti.subject_to( alpha(1,jj + 1) >= alpha(1,jj)*0.99 )
 
-    opti.subject_to( beta(1,jj + 1) <= beta(1,jj)*1.01 )
-    opti.subject_to( beta(1,jj + 1) >= beta(1,jj)*0.99 )
+    % opti.subject_to( beta(1,jj + 1) <= beta(1,jj)*1.01 )
+    % opti.subject_to( beta(1,jj + 1) >= beta(1,jj)*0.99 )
 end
- opti.subject_to( alpha(1,policy_idx(2)+dd) <= alpha(1,policy_idx(2))*0.9 )
- opti.subject_to( beta(1,policy_idx(2)+dd) <= beta(1,policy_idx(2))*0.9 )
- opti.subject_to( beta(1,policy_idx(3)+dd) <= beta(1,policy_idx(3)) )
- opti.subject_to( beta(1,policy_idx(6)+dd) <= beta(1,policy_idx(6))*0.9 )
- opti.subject_to( alpha(1,policy_idx(6)+dd) <= alpha(1,policy_idx(6))*0.9 )
+
+ % opti.subject_to( alpha(1,policy_idx(2)+dd) <= alpha(1,policy_idx(2))*0.9 )
+ % opti.subject_to( beta(1,policy_idx(2)+dd) <= beta(1,policy_idx(2))*0.9 )
+ % opti.subject_to( beta(1,policy_idx(3)+dd) <= beta(1,policy_idx(3)) )
+ % opti.subject_to( alpha(1,policy_idx(7)+dd) >= alpha(1,policy_idx(7))*1.1)
+ % opti.subject_to( beta(1,policy_idx(7)+dd) > beta(1,policy_idx(7))*1.1 )
+ % opti.subject_to( beta(1,policy_idx(6)+dd) <= beta(1,policy_idx(6))*0.9 )
+ % opti.subject_to( alpha(1,policy_idx(6)+dd) <= alpha(1,policy_idx(6))*0.9 )
+ % opti.subject_to( beta(1,policy_idx(8)+dd) >= beta(1,policy_idx(8))*1.1 )
+ % opti.subject_to( beta(1,policy_idx(4)+dd) <= beta(1,policy_idx(4))*0.9 )
+ % opti.subject_to( alpha(1,policy_idx(4)+dd) <= alpha(1,policy_idx(4))*0.9 )
 
 %% RK45 simulation of the differential equations
 
@@ -277,7 +287,7 @@ for k = 1:N-1
    k2 = f(X(:,k)+dt/2*k1, coefs(:,k));
    k3 = f(X(:,k)+dt/2*k2, coefs(:,k));
    k4 = f(X(:,k)+dt*k3,   coefs(:,k));
-   x_next = X(:,k) + dt/6*(k1+2*k2+2*k3+k4);
+   x_next = X(:,k) + dt/6*(k1+2*k2+2*k3+k4) + [exp(-1/180)*X(8); zeros(7,1)];
    opti.subject_to(X(:,k+1) == x_next); % close the gaps
 
 end
@@ -287,6 +297,8 @@ end
 
 data_obj = horzcat(data(:)); 
 X_obj = horzcat(X(:));
+weightVec = [0.5 0.25 0.75 1 1 0.25 0.1 0.75];
+Qvec = repmat(weightVec',399,1)';
 
 maxData =( ones(399,1)*max(data,[],2)' )';
 maxData = horzcat(maxData(:));
@@ -335,7 +347,7 @@ w4 = 20;   % weight on coefficient smoothing
 
 % normalization in cost function - max data
 
-obj = sum(((data_obj - X_obj)./maxData).^2)*0.01 + cost_matrix_obj*100;
+obj = Qvec*((data_obj - X_obj)./maxData).^2 + cost_matrix_obj*1000;
 
 opti.minimize(obj);
 p_opts = struct('expand', false);
@@ -388,7 +400,6 @@ grid on
 legend('Real Data', 'ODE Simulated Data','Interpreter','latex', 'Location','northeast')
 xlim([new_time(1), new_time(end)])
 set(gca, 'TickLabelInterpreter', 'Latex')
-
 
 % Infected - I
 figure(2)
@@ -467,7 +478,6 @@ legend('Real Data', 'ODE Simulated Data','Interpreter','latex', 'Location','sout
 xlim([new_time(1), new_time(end)])
 set(gca, 'TickLabelInterpreter', 'Latex')
 
-
 % Vaccinated - V
 figure(8)
 plot(new_time, DataArray{8,:}, LineWidth=1.5)
@@ -483,7 +493,7 @@ set(gca, 'TickLabelInterpreter', 'Latex')
 %% Coefficients trend plot
 close all
 
-% Coefficients alpha and beta
+% Coefficients alpha
 figure(7)
 plot(new_time, opti_coefficients.alpha, LineWidth=1.5)
 ylabel('Coefficients Values','Interpreter','latex')
@@ -494,7 +504,7 @@ xlim([new_time(1), new_time(end)])
 set(gca, 'TickLabelInterpreter', 'Latex')
 
 
-% Coefficients alpha and beta
+% Coefficients beta
 figure(8)
 plot(new_time, opti_coefficients.beta, LineWidth=1.5)
 ylabel('Coefficients Values','Interpreter','latex')
@@ -526,18 +536,9 @@ title('\textbf{Coefficients $\delta_1$ and $\delta_2$}','Interpreter','latex')
 grid on
 legend('$\delta_1$', '$\delta_2$','Interpreter','latex', 'Location','northeast')
 xlim([new_time(1), new_time(end)])
+ylim([0, max(opti_coefficients.delta1)*1.2])
 set(gca, 'TickLabelInterpreter', 'Latex')
 
-
-% Coefficient epsi
-figure(11)
-plot(new_time, opti_coefficients.epsi, LineWidth=1.5)
-ylabel('Coefficients Values','Interpreter','latex')
-title('\textbf{Coefficient $\epsilon$}','Interpreter','latex')
-grid on
-legend('$\epsilon$','Interpreter','latex', 'Location','northeast')
-xlim([new_time(1), new_time(end)])
-set(gca, 'TickLabelInterpreter', 'Latex')
 
 
 % Coefficients sigma1 and sigma2
@@ -550,6 +551,7 @@ title('\textbf{Coefficients $\sigma_1$ and $\sigma_2$}','Interpreter','latex')
 grid on
 legend('$\sigma_1$','$\sigma_2$','Interpreter','latex', 'Location','northeast')
 xlim([new_time(1), new_time(end)])
+ylim([0, max(opti_coefficients.sigma1)*1.2])
 set(gca, 'TickLabelInterpreter', 'Latex')
 
 
@@ -563,6 +565,7 @@ title('\textbf{Coefficients $\tau_1$ and $\tau_2$}','Interpreter','latex')
 grid on
 legend('$\tau_1$','$\tau_2$','Interpreter','latex', 'Location','northeast')
 xlim([new_time(1), new_time(end)])
+ylim([0, max(opti_coefficients.tau2)*1.2])
 set(gca, 'TickLabelInterpreter', 'Latex')
 
 
@@ -574,7 +577,9 @@ title('\textbf{Coefficient $\lambda$}','Interpreter','latex')
 grid on
 legend('$\lambda$', 'Interpreter','latex', 'Location','northeast')
 xlim([new_time(1), new_time(end)])
+ylim([0, max(opti_coefficients.lambda)*1.2])
 set(gca, 'TickLabelInterpreter', 'Latex')
+
 
 % Coefficients phi
 figure(14)
@@ -584,6 +589,7 @@ title('\textbf{Coefficient $\phi$}','Interpreter','latex')
 grid on
 legend('$\phi$', 'Interpreter','latex', 'Location','northeast')
 xlim([new_time(1), new_time(end)])
+ylim([0, max(opti_coefficients.phi)*1.2])
 set(gca, 'TickLabelInterpreter', 'Latex')
 
 % Coefficient kappa
@@ -594,6 +600,7 @@ title('\textbf{Coefficient $\kappa$}','Interpreter','latex')
 grid on
 legend('$\kappa$', 'Interpreter','latex', 'Location','northeast')
 xlim([new_time(1), new_time(end)])
+ylim([0, max(opti_coefficients.kappa)*1.2])
 set(gca, 'TickLabelInterpreter', 'Latex')
 
 %% Additional Intersting plots,
@@ -635,6 +642,8 @@ ylim([0, max(opti_coefficients.alpha)*1.05])
 xlim([new_time(1), new_time(end)])
 set(gca, 'TickLabelInterpreter', 'Latex')
 
+
+
 % Figure of the beta trend related to policy In italy
 figure()
 for ii = 1:length(policy_dates)-1
@@ -650,8 +659,10 @@ title('\textbf{$\beta$ coefficient}','Interpreter','latex')
 grid on
 legend('Interpreter','latex')
 xlim([new_time(1), new_time(end)])
-ylim([min(opti_coefficients.beta), max(opti_coefficients.beta)*1.05])
+ylim([0, max(opti_coefficients.beta)*1.05])
 set(gca, 'TickLabelInterpreter', 'Latex')
+
+
 
 
 % Figure of the Gamma trend related to policy In italy
@@ -692,6 +703,7 @@ legend(' $\gamma$', 'Tests','Interpreter','latex')
 grid on;
 xlim([new_time(1), new_time(end)])
 
+
 %% Variants and coefficients 
 
 load("/Users/marcodelloro/Desktop/Thesis/MSc-Thesis-TUe/Data_Collection/Smooth_Variants.mat")
@@ -718,6 +730,7 @@ title('\textbf{SARS-CoV-2 Variants - Coefficient $\alpha$}','Interpreter','latex
 legend('$\alpha$','SARS-CoV-2', 'B.1.1.7 - ALPHA VARIANT', 'P.1 - GAMMA VARIANT', ' B.1.617.2 - DELTA VARIANT', 'Interpreter','latex','Location','northeastoutside')
 grid on
 xlim([SmoothVar.date(1), SmoothVar.date(end)])
+ylim([0, max(opti_coefficients.alpha)*1.2])
 
 % Beta and Variants
 figure()
@@ -741,6 +754,7 @@ title('\textbf{SARS-CoV-2 Variants - Coefficient $\beta$}','Interpreter','latex'
 legend('$\beta$','SARS-CoV-2', 'B.1.1.7 - ALPHA VARIANT', 'P.1 - GAMMA VARIANT', ' B.1.617.2 - DELTA VARIANT', 'Interpreter','latex','Location','northeastoutside')
 grid on
 xlim([SmoothVar.date(1), SmoothVar.date(end)])
+ylim([0, max(opti_coefficients.beta)*1.2])
 
 
 % Deltas and Variants
@@ -759,7 +773,7 @@ yyaxis left;
 plot(new_time, opti_coefficients.delta1, 'k-', LineWidth=2)
 hold on
 plot(new_time, opti_coefficients.delta2, 'r-', LineWidth=2)
-ylabel('$\beta$ Coefficient Values','Interpreter','latex')
+ylabel('$\delta$ Coefficient Values','Interpreter','latex')
 ax1 = gca;
 ax1.YColor = 'k';
 title('\textbf{}','Interpreter','latex')
@@ -767,6 +781,7 @@ title('\textbf{SARS-CoV-2 Variants - Coefficient $\delta$}','Interpreter','latex
 legend('$\delta_1$','$\delta_2$','SARS-CoV-2', 'B.1.1.7 - ALPHA VARIANT', 'P.1 - GAMMA VARIANT', ' B.1.617.2 - DELTA VARIANT', 'Interpreter','latex','Location','northeastoutside')
 grid on
 xlim([SmoothVar.date(1), SmoothVar.date(end)])
+ylim([0, max(opti_coefficients.delta1)*1.2])
 
 % Sigmas and Variants
 figure()
@@ -792,6 +807,7 @@ title('\textbf{SARS-CoV-2 Variants - Coefficient $\sigma$}','Interpreter','latex
 legend('$\sigma_1$','$\sigma_2$','SARS-CoV-2', 'B.1.1.7 - ALPHA VARIANT', 'P.1 - GAMMA VARIANT', ' B.1.617.2 - DELTA VARIANT', 'Interpreter','latex','Location','northeastoutside')
 grid on
 xlim([SmoothVar.date(1), SmoothVar.date(end)])
+ylim([0, max(opti_coefficients.sigma1)*1.2])
 
 
 % Taus and Variants
@@ -810,7 +826,7 @@ yyaxis left;
 plot(new_time, opti_coefficients.tau1, 'k-', LineWidth=2)
 hold on
 plot(new_time, opti_coefficients.tau2, 'r-', LineWidth=2)
-ylabel('$\beta$ Coefficient Values','Interpreter','latex')
+ylabel('$\tau$ Coefficient Values','Interpreter','latex')
 ax1 = gca;
 ax1.YColor = 'k';
 title('\textbf{}','Interpreter','latex')
@@ -818,6 +834,7 @@ title('\textbf{SARS-CoV-2 Variants - Coefficient $\tau$}','Interpreter','latex')
 legend('$\tau_1$','$\tau_2$','SARS-CoV-2', 'B.1.1.7 - ALPHA VARIANT', 'P.1 - GAMMA VARIANT', ' B.1.617.2 - DELTA VARIANT', 'Interpreter','latex','Location','northeastoutside')
 grid on
 xlim([SmoothVar.date(1), SmoothVar.date(end)])
+ylim([0, max(opti_coefficients.tau2)*1.2])
 
 
 % Lambda and Variants
@@ -842,6 +859,7 @@ title('\textbf{SARS-CoV-2 Variants - Coefficient $\lambda$}','Interpreter','late
 legend('$\lambda$','SARS-CoV-2', 'B.1.1.7 - ALPHA VARIANT', 'P.1 - GAMMA VARIANT', ' B.1.617.2 - DELTA VARIANT', 'Interpreter','latex','Location','northeastoutside')
 grid on
 xlim([SmoothVar.date(1), SmoothVar.date(end)])
+ylim([0, max(opti_coefficients.lambda)*1.2])
 
 % Epsi and Variants
 figure()
@@ -857,7 +875,7 @@ ax2 = gca;
 ax2.YColor = 'k';
 yyaxis left;
 plot(new_time, opti_coefficients.epsi, 'k','LineWidth', 2);
-ylabel('$\beta$ Coefficient Values','Interpreter','latex')
+ylabel('$\epsilon$ Coefficient Values','Interpreter','latex')
 ax1 = gca;
 ax1.YColor = 'k';
 title('\textbf{}','Interpreter','latex')

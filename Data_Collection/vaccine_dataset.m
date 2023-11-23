@@ -26,7 +26,7 @@ vax21 = groupsummary(vaxRaw21, 'data', 'sum');
 vax_tot = [table2array(vax20(:,3:end)); table2array(vax21(1:276,3:end))];
 missing_days = 399 - size(vax_tot,1);
 
-% wait_period = zeros(missing_days,4);
+wait_period = zeros(missing_days,4);
 % wait_period = ones(missing_days,4) * 0.1;
 
 vax_tot = [wait_period; vax_tot];
@@ -50,11 +50,13 @@ vaxData.sum_dpi = cumsum(vaxData.dpi);
 
 % Vaccines Cumulated 
 figure()
-plot(vaxData.date, (vaxData.sum_d2 + vaxData.sum_dpi ), LineWidth=1.5)
+plot(vaxData.date, vaxData.sum_d2, LineWidth=1.5)
+hold on
+plot(vaxData.date, vaxData.sum_dpi, LineWidth=1.5)
 ylabel('$\char"0023$ of cases','Interpreter','latex')
-title('\textbf{Raw Vaccine Data}','Interpreter','latex')
+title('\textbf{Vaccine Compartment Trend}','Interpreter','latex')
 grid on
-legend('Vaccines','latex', 'Location','northeast')
+legend('Vaccines 2nd dose','Post Infection Dose','latex', 'Location','northwest')
 xlim([date(1), date(end)])
 set(gca, 'TickLabelInterpreter', 'Latex')
 
