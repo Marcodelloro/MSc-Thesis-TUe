@@ -36,7 +36,6 @@ DataArray = {S_data ; I_data ; D_data ; T1_data ; T2_data ; H_data ; E_data ; V_
 N = 399;
 
 data = cell2mat(DataArray); % to use non-scored data
-% data = cell2mat(DataNorm); % to use non-scored data
 
 new_time = date;
 
