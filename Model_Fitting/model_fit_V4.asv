@@ -83,8 +83,10 @@ opti.subject_to(alpha(1:end) <= 0.6);
 
 % Beta parameter - bound on beta value (different bound for different months)
 
-opti.subject_to(beta(1:end) >= 0);
-opti.subject_to(beta(1:end) <= 0.015);
+% opti.subject_to(beta(1:end) >= 0);
+% opti.subject_to(beta(1:end) <= 0.015);
+
+opti.subject_to(beta(1:end) == 1e-6);
 
 % Gamma parameter - bound on gamma value (different bound for different months)
 
@@ -124,7 +126,13 @@ opti.subject_to(tau2(1:end) <= 0.008);
 % Lambda parameter - bound on lambda value (different bound for different months)
 
 opti.subject_to(lambda(1:end) >= 0);   % bound on lambda value
-opti.subject_to(lambda(1:end) == 0.05);
+opti.subject_to(lambda(1:end) <= 0.2);
+
+% phi parameter - bound on phi value (different bound for different months)
+
+opti.subject_to(phi(1:end) >= 0);   % bound on phi value
+opti.subject_to(kappa(1:end) >= 0);   % bound on phi value
+
 
 % Initial Conditions constraints on ODEs
 
@@ -135,6 +143,7 @@ opti.subject_to(T1(1,1) == data(4,1));
 opti.subject_to(T2(1,1) == data(5,1));
 opti.subject_to(H(1,1) == data(6,1));
 opti.subject_to(E(1,1) == data(7,1));
+opti.subject_to(V(1,1) == data(8,1));
 
 % Initial Conditions constraints on Parameters 
 
@@ -143,7 +152,7 @@ opti.subject_to(E(1,1) == data(7,1));
 % opti.subject_to(gamma(1,1) == 0.3);
 
 
-opti.subject_to(S + I + D + T1 + T2 + H + E == 1);
+opti.subject_to(S + I + D + T1 + T2 + H + E + V == 1);
 
 opti.subject_to(S >= 0);
 opti.subject_to(I >= 0);
@@ -152,6 +161,7 @@ opti.subject_to(T1 >= 0);
 opti.subject_to(T2 >= 0);
 opti.subject_to(H >= 0);
 opti.subject_to(E >= 0);
+opti.subject_to(V >= 0);
 
 opti.subject_to(alpha >= 2*beta); % bound on contagion parameter between alpha and beta
 
@@ -161,45 +171,6 @@ opti.subject_to(tau1 <= tau2);
 opti.subject_to(sigma2 <= sigma1);
 opti.subject_to(delta1 > delta2);
 
-%% HARD Constraints on the variation of the coefficents 
-
-% Constraints related to the coefficients - Note that coefficients smoothness will be required only in
-% 'constant zones' so in time perioods with constant policies
-% For subsequent "dd" value, the constraints will be removed 
-
-% 8 different areas will be covered
-policy_idx = [1 40 69 116 141 190 242 294 399];   % Values taken from italian policies applied for the pandemic
-
-for ii=1:length(policy_idx)
-    policy_dates(ii) = [new_time(policy_idx(ii))];
-end
-
-dd = 1; % days for how much the constraint will be removed
-
-% Note that as assumption I ASSUME that only coefficients \alpha and \beta can be influenced by
-% the different policies applied form the government
-
-% constraints NO VARIATION 
-for kk = 1:length(policy_idx)-1
-    for jj = policy_idx(kk)+dd:policy_idx(kk+1)-1
-
-        opti.subject_to( alpha(1,jj + 1) == alpha(1,jj) )
-        opti.subject_to( alpha(1,jj + 1) == alpha(1,jj) )
-
-        opti.subject_to( beta(1,jj + 1) == beta(1,jj) )
-        opti.subject_to( beta(1,jj + 1) == beta(1,jj) )
-
-    end
-end
-
-% constraint on the first part of the simulation
-for jj = 1:policy_idx(2)-1
-    opti.subject_to( alpha(1,jj + 1) <= alpha(1,jj)*1.01 )
-    opti.subject_to( alpha(1,jj + 1) >= alpha(1,jj)*0.99 )
-
-    opti.subject_to( beta(1,jj + 1) <= beta(1,jj)*1.01 )
-    opti.subject_to( beta(1,jj + 1) >= beta(1,jj)*0.99 )
-end
 %% RK45 simulation of the differential equations
 
 f = @(X, coefs)            [ -X(1)*(coefs(1)*X(2) + coefs(2)*X(3)) ;                                                  % dS/dt = S_dot 
@@ -235,23 +206,10 @@ Qvec = repmat(weightVec',N,1)';
 maxData =( ones(N,1)*max(shortData,[],2)' )';
 maxData = horzcat(maxData(:));
 
-coefs_matrix_obj = [    sum( ( (diff(coefs(3,:)))./0.5).^2 );
-                        sum( ( (diff(coefs(4,:)))./0.002).^2 );
-                        sum( ( (diff(coefs(5,:)))./0.002).^2 );
-                        sum( ( (diff(coefs(6,:)))./0.6).^2 );
-                        sum( ( (diff(coefs(7,:)))./0.03).^2 );
-                        sum( ( (diff(coefs(8,:)))./0.03).^2 );
-                        sum( ( (diff(coefs(9,:)))./0.03).^2 );
-                        sum( ( (diff(coefs(10,:)))./0.05).^2 );
-                        sum( ( (diff(coefs(11,:)))./0.5 ).^2);     
-                    ];
-
-cost_matrix_obj =  coefs_matrix_obj(1) + coefs_matrix_obj(2) + coefs_matrix_obj(3) + coefs_matrix_obj(4) + coefs_matrix_obj(5) +...
-                   coefs_matrix_obj(6) + coefs_matrix_obj(7) +  coefs_matrix_obj(8) + coefs_matrix_obj(9);
-
 % normalization in cost function - max data
-obj = Qvec*((data_obj - X_obj)./maxData).^2 + cost_matrix_obj*1500;
-  
+
+obj = Qvec*((data_obj - X_obj)./maxData).^2;    
+
 opti.minimize(obj);
 p_opts = struct('expand', false);
 s_opts = struct('max_iter',1e4, 'tol',1e-4,'constr_viol_tol',1e-4,'compl_inf_tol',1e-4,'linear_solver','MA27'); %'MA27' 'MA57' 'MA77' 'MA86' 'MA97'
@@ -285,102 +243,11 @@ lambda_bound = any(opti_coefficients.lambda == 0.2)
 % Saving of the simulation results 
 
 Opti_results = {SIDTTHE_trends, 'Group Trends'; opti_coefficients, 'Coefficients Optimised'; new_time, 'Time for Plotting'};
-filename = 'EKF_coefs.mat';
+filename = 'Optimization_Results.mat';
 save(filename, 'Opti_results');
 
 %% Coefficients trend plot
 close all
-
-% Susceptible - S 
-  
-figure(1)
-plot(new_time, DataArray{1,:}, LineWidth=1.5)
-hold on
-plot(new_time, SIDTTHE_trends.S, LineWidth=1.5)
-ylabel('$\char"0023$ of cases','Interpreter','latex')
-title('\textbf{Curve Fitting - Susceptible}','Interpreter','latex')
-grid on
-legend('Real Data', 'ODE Simulated Data','Interpreter','latex', 'Location','northeast')
-xlim([new_time(1), new_time(end)])
-set(gca, 'TickLabelInterpreter', 'Latex')
-
-% Infected - I
-figure(2)
-plot(new_time, DataArray{2,:}, LineWidth=1.5)
-hold on
-plot(new_time, SIDTTHE_trends.I, LineWidth=1.5)
-ylabel('$\char"0023$ of cases','Interpreter','latex')
-title('\textbf{Curve Fitting - Infected}','Interpreter','latex')
-grid on
-legend('Real Data', 'ODE Simulated Data','Interpreter','latex', 'Location','northeast')
-xlim([new_time(1), new_time(end)])
-set(gca, 'TickLabelInterpreter', 'Latex')
-
-
-% Diagnosed - D
-figure(3)
-plot(new_time, DataArray{3,:}, LineWidth=1.5)
-hold on
-plot(new_time, SIDTTHE_trends.D, LineWidth=1.5)
-ylabel('$\char"0023$ of cases','Interpreter','latex')
-title('\textbf{Curve Fitting - Diagnosed}','Interpreter','latex')
-grid on
-legend('Real Data', 'ODE Simulated Data','Interpreter','latex', 'Location','northeast')
-xlim([new_time(1), new_time(end)])
-set(gca, 'TickLabelInterpreter', 'Latex')
-
-
-% Lightly Threatned - T1
-figure(4)
-plot(new_time, DataArray{4,:}, LineWidth=1.5)
-hold on
-plot(new_time, SIDTTHE_trends.T1, LineWidth=1.5)
-ylabel('$\char"0023$ of cases','Interpreter','latex')
-title('\textbf{Curve Fitting - Hospitalised }','Interpreter','latex')
-grid on
-legend('Real Data', 'ODE Simulated Data','Interpreter','latex', 'Location','northeast')
-xlim([new_time(1), new_time(end)])
-set(gca, 'TickLabelInterpreter', 'Latex')
-
-
-% ICU / Heavily Threatned - T2
-figure(5)
-plot(new_time, DataArray{5,:}, LineWidth=1.5)
-hold on
-plot(new_time, SIDTTHE_trends.T2, LineWidth=1.5)
-ylabel('$\char"0023$ of cases','Interpreter','latex')
-title('\textbf{Curve Fitting - ICUs / Heavily Threatned }','Interpreter','latex')
-grid on
-legend('Real Data', 'ODE Simulated Data','Interpreter','latex', 'Location','northeast')
-xlim([new_time(1), new_time(end)])
-set(gca, 'TickLabelInterpreter', 'Latex')
-
-
-% Healed - H
-figure(6)
-plot(new_time, DataArray{6,:}, LineWidth=1.5)
-hold on
-plot(new_time, SIDTTHE_trends.H, LineWidth=1.5)
-ylabel('$\char"0023$ of cases','Interpreter','latex')
-title('\textbf{Curve Fitting - Healed}','Interpreter','latex')
-grid on
-legend('Real Data', 'ODE Simulated Data','Interpreter','latex', 'Location','southeast')
-xlim([new_time(1), new_time(end)])
-set(gca, 'TickLabelInterpreter', 'Latex')
-
-
-% Deceased - E
-figure(7)
-plot(new_time, DataArray{7,:}, LineWidth=1.5)
-hold on
-plot(new_time, SIDTTHE_trends.E, LineWidth=1.5)
-ylabel('$\char"0023$ of cases','Interpreter','latex')
-title('\textbf{Curve Fitting - Expired}','Interpreter','latex')
-grid on
-legend('Real Data', 'ODE Simulated Data','Interpreter','latex', 'Location','southeast')
-xlim([new_time(1), new_time(end)])
-set(gca, 'TickLabelInterpreter', 'Latex')
-
 
 % Coefficients alpha
 figure(7)
@@ -388,7 +255,7 @@ plot(new_time, opti_coefficients.alpha, LineWidth=1.5)
 ylabel('Coefficients Values','Interpreter','latex')
 title('\textbf{Coefficient $\alpha$}','Interpreter','latex')
 grid on
-legend('$\alpha$','Interpreter','latex', 'Location','northeast')
+legend('$\beta$','Interpreter','latex', 'Location','northeast')
 xlim([new_time(1), new_time(end)])
 set(gca, 'TickLabelInterpreter', 'Latex')
 
@@ -425,6 +292,7 @@ title('\textbf{Coefficients $\delta_1$ and $\delta_2$}','Interpreter','latex')
 grid on
 legend('$\delta_1$', '$\delta_2$','Interpreter','latex', 'Location','northeast')
 xlim([new_time(1), new_time(end)])
+ylim([0, max(opti_coefficients.delta1)*1.2])
 set(gca, 'TickLabelInterpreter', 'Latex')
 
 
@@ -438,6 +306,7 @@ title('\textbf{Coefficients $\sigma_1$ and $\sigma_2$}','Interpreter','latex')
 grid on
 legend('$\sigma_1$','$\sigma_2$','Interpreter','latex', 'Location','northeast')
 xlim([new_time(1), new_time(end)])
+ylim([0, max(opti_coefficients.sigma1)*1.2])
 set(gca, 'TickLabelInterpreter', 'Latex')
 
 
@@ -451,6 +320,7 @@ title('\textbf{Coefficients $\tau_1$ and $\tau_2$}','Interpreter','latex')
 grid on
 legend('$\tau_1$','$\tau_2$','Interpreter','latex', 'Location','northeast')
 xlim([new_time(1), new_time(end)])
+ylim([0, max(opti_coefficients.tau2)*1.2])
 set(gca, 'TickLabelInterpreter', 'Latex')
 
 
@@ -462,4 +332,5 @@ title('\textbf{Coefficient $\lambda$}','Interpreter','latex')
 grid on
 legend('$\lambda$', 'Interpreter','latex', 'Location','northeast')
 xlim([new_time(1), new_time(end)])
+ylim([0, max(opti_coefficients.lambda)*1.2])
 set(gca, 'TickLabelInterpreter', 'Latex')

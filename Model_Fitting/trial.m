@@ -8,6 +8,8 @@ load('/Users/marcodelloro/Desktop/Thesis/MSc-Thesis-TUe/Data_Collection/SIDTTHE_
 load('/Users/marcodelloro/Desktop/Thesis/MSc-Thesis-TUe/Data_Collection/Tests_data.mat');
 load('/Users/marcodelloro/Desktop/Thesis/MSc-Thesis-TUe/Data_Collection/vaxData.mat'); 
 
+coef_val = load('/Users/marcodelloro/Desktop/matfile.mat'); 
+
 addpath('/Users/marcodelloro/Downloads/casadi-3.6.3-osx64-matlab2018b')
 import casadi.*;
 opti = casadi.Opti();
@@ -133,39 +135,39 @@ opti.subject_to(kappa >= 0);   % bound on phi value
 
 % Initial Conditions constraints on ODEs
 
-% opti.subject_to(S(1,1) == data(1,1));
-% opti.subject_to(I(1,1) == data(2,1));
-% opti.subject_to(D(1,1) == data(3,1));
-% opti.subject_to(T1(1,1) == data(4,1));
-% opti.subject_to(T2(1,1) == data(5,1));
-% opti.subject_to(H(1,1) == data(6,1));
-% opti.subject_to(E(1,1) == data(7,1));
-% opti.subject_to(V(1,1) == data(8,1));
-
-% Initial Conditions constraints on Parameters 
-
-% opti.subject_to(alpha(1,1) == 0.2);
-% opti.subject_to(beta(1,1) == 10e-3);
-% opti.subject_to(gamma(1,1) == 0.3);
-
+% % opti.subject_to(S(1,1) == data(1,1));
+% % opti.subject_to(I(1,1) == data(2,1));
+% % opti.subject_to(D(1,1) == data(3,1));
+% % opti.subject_to(T1(1,1) == data(4,1));
+% % opti.subject_to(T2(1,1) == data(5,1));
+% % opti.subject_to(H(1,1) == data(6,1));
+% % opti.subject_to(E(1,1) == data(7,1));
+% % opti.subject_to(V(1,1) == data(8,1));
+% 
+% % Initial Conditions constraints on Parameters 
+% 
+% % opti.subject_to(alpha(1,1) == 0.2);
+% % opti.subject_to(beta(1,1) == 10e-3);
+% % opti.subject_to(gamma(1,1) == 0.3);
+% 
 opti.subject_to(S + I + D + T1 + T2 + H + E + V == 1);
-
-opti.subject_to(S >= 0);
-opti.subject_to(I >= 0);
-opti.subject_to(D >= 0);
-opti.subject_to(T1 >= 0);
-opti.subject_to(T2 >= 0);
-opti.subject_to(H >= 0);
-opti.subject_to(E >= 0);
-opti.subject_to(V >= 0);
-
-opti.subject_to(alpha >= 2*beta); % bound on contagion parameter between alpha and beta
-
-% my constraints assumptions 
-
-opti.subject_to(tau1 <= tau2);
-opti.subject_to(sigma2 <= sigma1);
-opti.subject_to(delta1 > delta2);
+% 
+% opti.subject_to(S >= 0);
+% opti.subject_to(I >= 0);
+% opti.subject_to(D >= 0);
+% opti.subject_to(T1 >= 0);
+% opti.subject_to(T2 >= 0);
+% opti.subject_to(H >= 0);
+% opti.subject_to(E >= 0);
+% opti.subject_to(V >= 0);
+% 
+% opti.subject_to(alpha >= 2*beta); % bound on contagion parameter between alpha and beta
+% 
+% % my constraints assumptions 
+% 
+% opti.subject_to(tau1 <= tau2);
+% opti.subject_to(sigma2 <= sigma1);
+% opti.subject_to(delta1 > delta2);
 
 %% HARD Constraints on the variation of the coefficents 
 % 
@@ -236,7 +238,7 @@ rhs =               [ -X(1)*(coefs(1)*X(2) + coefs(2)*X(3)) - X(1)*coefs(12) ;  
                     ( (X(2) + X(3))*coefs(11) ) + ( X(4)*coefs(7) ) + ( X(5)*coefs(8) ) - X(6)*coefs(13) ;  % dH/dt = H_dot
                     ( X(4)*coefs(9) ) + ( X(5)*coefs(10) );
                      X(1)*coefs(12) + X(6)*coefs(13) ];
-
+     
 ode = Function('ode',{X,coefs},{rhs});
 
 dt = 1;
@@ -282,7 +284,7 @@ meanData = horzcat(meanData(:));
 
 % normalization in cost function - max data
 
-obj = sum((data_obj - X_obj)./maxData).^2;
+obj = sum(((data_obj - X_obj)./maxData).^2);
 
 opti.minimize(obj);
 p_opts = struct('expand', false);
@@ -327,7 +329,7 @@ opti_coefficients = array2table(opti.debug.value(coefs)', 'VariableNames', colum
 
 print_curves(SIDTTHE_trends,DataArray,new_time)
 
-%% Comparison Plot - Coefficients
-load("/Users/marcodelloro/Desktop/Thesis/MSc-Thesis-TUe/Data_Collection/Smooth_Variants.mat")
-
-print_coefs(opti_coefficients,new_time, policy_dates,SmoothVar,tests)
+% %% Comparison Plot - Coefficients
+% load("/Users/marcodelloro/Desktop/Thesis/MSc-Thesis-TUe/Data_Collection/Smooth_Variants.mat")
+% 
+% print_coefs(opti_coefficients,new_time, policy_dates,SmoothVar,tests)

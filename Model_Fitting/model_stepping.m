@@ -69,6 +69,21 @@ V = opti.variable(1,N);
 
 X = [S; I; D; T1; T2; H; E; V]; % state trajectory
 
+% steps for the dynamics
+
+step1_alpha = opti.variable(1,1);
+step2_alpha = opti.variable(1,1);
+step3_alpha = opti.variable(1,1);
+
+step1_beta = opti.variable(1,1);
+step2_beta = opti.variable(1,1);
+step3_beta = opti.variable(1,1);
+
+steps = [step1_alpha step1_beta step2_alpha step2_beta step3_alpha step3_beta ];
+opti.subject_to(steps >= 0);
+
+
+
 % Initial conditions for the various parameters
 
 opti.set_initial(S,ones(N,1) * data(1,1));
@@ -105,10 +120,8 @@ opti.subject_to(alpha(1:end) <= 0.6);
 
 % Beta parameter - bound on beta value (different bound for different months)
 
-% opti.subject_to(beta(1:end) >= 0);
-% opti.subject_to(beta(1:end) <= 0.015);
-
-opti.subject_to(beta(1:end) == 1e-6);
+opti.subject_to(beta(1:end) >= 0);
+opti.subject_to(beta(1:end) <= 0.015);
 
 % Gamma parameter - bound on gamma value (different bound for different months)
 
@@ -250,16 +263,18 @@ for jj = 1:policy_idx(2)-1
     % opti.subject_to( beta(1,jj + 1) >= beta(1,jj)*0.99 )
 end
 
- % opti.subject_to( alpha(1,policy_idx(2)+dd) <= alpha(1,policy_idx(2))*0.9 )
- % opti.subject_to( beta(1,policy_idx(2)+dd) <= beta(1,policy_idx(2))*0.9 )
- % opti.subject_to( beta(1,policy_idx(3)+dd) <= beta(1,policy_idx(3)) )
- % opti.subject_to( alpha(1,policy_idx(7)+dd) >= alpha(1,policy_idx(7))*1.1)
- % opti.subject_to( beta(1,policy_idx(7)+dd) > beta(1,policy_idx(7))*1.1 )
- % opti.subject_to( beta(1,policy_idx(6)+dd) <= beta(1,policy_idx(6))*0.9 )
- % opti.subject_to( alpha(1,policy_idx(6)+dd) <= alpha(1,policy_idx(6))*0.9 )
- % opti.subject_to( beta(1,policy_idx(8)+dd) >= beta(1,policy_idx(8))*1.1 )
- % opti.subject_to( beta(1,policy_idx(4)+dd) <= beta(1,policy_idx(4))*0.9 )
- % opti.subject_to( alpha(1,policy_idx(4)+dd) <= alpha(1,policy_idx(4))*0.9 )
+ opti.subject_to( alpha(1,policy_idx(2)+dd) == alpha(1,policy_idx(2)) - step1_alpha )
+ opti.subject_to( beta(1,policy_idx(2)+dd) == beta(1,policy_idx(2)) - step1_beta )
+ opti.subject_to( alpha(1,policy_idx(3)+dd) == alpha(1,policy_idx(3)) - step2_alpha )
+ opti.subject_to( beta(1,policy_idx(3)+dd) == beta(1,policy_idx(3)) - step2_beta )
+
+ opti.subject_to( alpha(1,policy_idx(7)+dd) == alpha(1,policy_idx(7)) + step3_alpha + step2_alpha)
+ opti.subject_to( beta(1,policy_idx(7)+dd) == beta(1,policy_idx(7)) + step3_alpha + step2_alpha)
+ 
+ opti.subject_to( beta(1,policy_idx(6)+dd) == beta(1,policy_idx(6)) + step3_alpha  )
+ opti.subject_to( alpha(1,policy_idx(6)+dd) == alpha(1,policy_idx(6)) + step3_alpha  )
+ opti.subject_to( beta(1,policy_idx(4)+dd) == beta(1,policy_idx(4)) - step3_alpha )
+ opti.subject_to( alpha(1,policy_idx(4)+dd) == alpha(1,policy_idx(4)) - step3_beta )
 
 %% RK45 simulation of the differential equations
 
@@ -291,9 +306,10 @@ for k = 1:N-1
 end
 
 
+
 %% Actual Optimization Simulation
 
-data_obj = horzcat(data(:)); 
+                               data_obj = horzcat(data(:)); 
 X_obj = horzcat(X(:));
 weightVec = [0.5 0.25 0.75 1 1 0.25 0.1 0.75];
 Qvec = repmat(weightVec',399,1)';
@@ -345,7 +361,7 @@ w4 = 20;   % weight on coefficient smoothing
 
 % normalization in cost function - max data
 
-obj = Qvec*((data_obj - X_obj)./maxData).^2 + cost_matrix_obj*100;
+obj = Qvec*((data_obj - X_obj)./maxData).^2 + cost_matrix_obj*1000;
 
 opti.minimize(obj);
 p_opts = struct('expand', false);
@@ -365,6 +381,10 @@ column_names = {'S', 'I', 'D', 'T1', 'T2', 'H', 'E', 'V'};
 SIDTTHE_trends = array2table(opti.debug.value(X)', 'VariableNames', column_names);
 
 % check if the coefficients reach the bounds
+
+steps = [opti.debug.value(step1_alpha) opti.debug.value(step1_beta) opti.debug.value(step2_alpha) opti.debug.value(step2_beta)...
+         opti.debug.value(step3_alpha) opti.debug.value(step3_beta) ];
+
 
 alpha_bound = any(opti_coefficients.alpha == 0.6)
 beta_bound = any(opti_coefficients.beta == 0.015)
