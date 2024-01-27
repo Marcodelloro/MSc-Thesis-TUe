@@ -28,7 +28,7 @@ for ii = 1:window:size(dataset,1)
     dec_avg.data(ii) = mean(dataset.deceduti(ii:ii+ window-1));                 % weekly average of deceased pop
     tests_avg(ii) = mean(dataset.diff_tamponi(ii:ii+ window-1));                % weekly avg of the tests
 
-    vax_avg(ii) = mean(dataset.(ii:ii+ window-1));        
+            
 end
 
 

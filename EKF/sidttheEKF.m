@@ -48,7 +48,6 @@ Pk_plus = (eye(17)- K*C)*Pk_min;
 Xk_plus = Xk_min + K*(Zmeas - C*Xk_min);
 
 Ob = obsv(A,C);
-z=null(Ob);
 
 B = zeros(17,1);
 [Abar,Bbar,Cbar,T,k] = obsvf(A,B,C);

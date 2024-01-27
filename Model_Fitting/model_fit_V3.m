@@ -620,6 +620,15 @@ for ii = 1:length(policy_dates)-1
     area.y_beta(ii, :) = [0 max(opti_coefficients.beta)*1.05 max(opti_coefficients.beta)*1.05 0];
     area.y_gamma(ii, :) = [0 max(opti_coefficients.gamma)*1.05 max(opti_coefficients.gamma)*1.05 0];
     
+    area.y_S(ii, :) = [0 max(SIDTTHE_trends.S)*1.05 max(SIDTTHE_trends.S)*1.05 0];
+    area.y_I(ii, :) = [0 max(SIDTTHE_trends.I)*1.05 max(SIDTTHE_trends.I)*1.05 0];
+    area.y_D(ii, :) = [0 max(SIDTTHE_trends.D)*1.05 max(SIDTTHE_trends.D)*1.05 0];
+    area.y_T1(ii, :) = [0 max(DataArray{4,:})*1.05 max(DataArray{4,:})*1.05 0];
+    area.y_T2(ii, :) = [0 max(SIDTTHE_trends.T2)*1.05 max(SIDTTHE_trends.T2)*1.05 0];
+    area.y_H(ii, :) = [0 max(SIDTTHE_trends.H)*1.05 max(SIDTTHE_trends.H)*1.05 0];
+    area.y_E(ii, :) = [0 max(DataArray{7,:})*1.05 max(DataArray{7,:})*1.05 0];
+    area.y_V(ii, :) = [0 max(SIDTTHE_trends.V)*1.05 max(SIDTTHE_trends.V)*1.05 0];
+
 end
 
 % Figure of the alpha trend related to policy In italy
@@ -700,6 +709,146 @@ title('\textbf{Comparison Testing Activity and $\gamma$ Coefficient}','Interpret
 legend(' $\gamma$', 'Tests','Interpreter','latex')
 grid on;
 xlim([new_time(1), new_time(end)])
+
+%% Data and fitting in with NPIs
+matlabBlue = [0, 0, 0];
+
+% S - data + NPIs
+figure(1)
+for ii = 1:length(policy_dates)-1
+    fill(area.x(ii, :) ,area.y_S(1, :), customColors2{ii,1} ,'FaceAlpha',.5,'EdgeColor', 'none','HandleVisibility', 'off')
+    hold on
+    xline(policy_dates(ii),":",'HandleVisibility', 'off')
+    hold on 
+end
+hold on
+plot(new_time, DataArray{1,:}, LineWidth =1.5, Color=matlabBlue)
+ylabel('$\char"0023$ of cases','Interpreter','latex')
+title('\textbf{Data - Susceptible}','Interpreter','latex')
+legend('Real Data', 'ODE Simulated Data','Interpreter','latex', 'Location','northeast')
+xlim([new_time(1), new_time(end)])
+ylim([0, max(SIDTTHE_trends.S)*1.05])
+set(gca, 'TickLabelInterpreter', 'Latex')
+
+
+% I - data + NPIs
+figure(2)
+for ii = 1:length(policy_dates)-1
+    fill(area.x(ii, :) ,area.y_I(1, :), customColors2{ii,1} ,'FaceAlpha',.5,'EdgeColor', 'none','HandleVisibility', 'off')
+    hold on
+    xline(policy_dates(ii),":",'HandleVisibility', 'off')
+    hold on 
+end
+hold on
+plot(new_time, DataArray{2,:}, LineWidth =1.5, Color=matlabBlue)
+ylabel('$\char"0023$ of cases','Interpreter','latex')
+title('\textbf{Data - Infected}','Interpreter','latex')
+legend('Real Data', 'ODE Simulated Data','Interpreter','latex', 'Location','northeast')
+xlim([new_time(1), new_time(end)])
+ylim([0, max(SIDTTHE_trends.I)*1.05])
+set(gca, 'TickLabelInterpreter', 'Latex')
+
+% D - data + NPIs
+figure(3)
+for ii = 1:length(policy_dates)-1
+    fill(area.x(ii, :) ,area.y_D(1, :), customColors2{ii,1} ,'FaceAlpha',.5,'EdgeColor', 'none','HandleVisibility', 'off')
+    hold on
+    xline(policy_dates(ii),":",'HandleVisibility', 'off')
+    hold on 
+end
+hold on
+plot(new_time, DataArray{3,:}, LineWidth =1.5, Color=matlabBlue)
+ylabel('$\char"0023$ of cases','Interpreter','latex')
+title('\textbf{Data - Diagnosed}','Interpreter','latex')
+legend('Real Data', 'ODE Simulated Data','Interpreter','latex', 'Location','northeast')
+xlim([new_time(1), new_time(end)])
+ylim([0, max(SIDTTHE_trends.D)*1.05])
+set(gca, 'TickLabelInterpreter', 'Latex')
+
+% T1 - data + NPIs
+figure(4)
+for ii = 1:length(policy_dates)-1
+    fill(area.x(ii, :) ,area.y_T1(1, :), customColors2{ii,1} ,'FaceAlpha',.5,'EdgeColor', 'none','HandleVisibility', 'off')
+    hold on
+    xline(policy_dates(ii),":",'HandleVisibility', 'off')
+    hold on 
+end
+hold on
+plot(new_time, DataArray{4,:}, LineWidth =1.5, Color=matlabBlue)
+ylabel('$\char"0023$ of cases','Interpreter','latex')
+title('\textbf{Data - Hospitalised}','Interpreter','latex')
+legend('Real Data', 'ODE Simulated Data','Interpreter','latex', 'Location','northeast')
+xlim([new_time(1), new_time(end)])
+ylim([0, max(DataArray{4,:})*1.05])
+set(gca, 'TickLabelInterpreter', 'Latex')
+
+% T2 - data + NPIs
+figure(5)
+for ii = 1:length(policy_dates)-1
+    fill(area.x(ii, :) ,area.y_T2(1, :), customColors2{ii,1} ,'FaceAlpha',.5,'EdgeColor', 'none','HandleVisibility', 'off')
+    hold on
+    xline(policy_dates(ii),":",'HandleVisibility', 'off')
+    hold on 
+end
+hold on
+plot(new_time, DataArray{5,:}, LineWidth =1.5, Color=matlabBlue)
+ylabel('$\char"0023$ of cases','Interpreter','latex')
+title('\textbf{Data - ICUs}','Interpreter','latex')
+legend('Real Data', 'ODE Simulated Data','Interpreter','latex', 'Location','northeast')
+xlim([new_time(1), new_time(end)])
+ylim([0, max(SIDTTHE_trends.T2)*1.05])
+set(gca, 'TickLabelInterpreter', 'Latex')
+
+% H - data + NPIs
+figure(6)
+for ii = 1:length(policy_dates)-1
+    fill(area.x(ii, :) ,area.y_H(1, :), customColors2{ii,1} ,'FaceAlpha',.5,'EdgeColor', 'none','HandleVisibility', 'off')
+    hold on
+    xline(policy_dates(ii),":",'HandleVisibility', 'off')
+    hold on 
+end
+hold on
+plot(new_time, DataArray{6,:}, LineWidth =1.5, Color=matlabBlue)
+ylabel('$\char"0023$ of cases','Interpreter','latex')
+title('\textbf{Data - Healed}','Interpreter','latex')
+legend('Real Data', 'ODE Simulated Data','Interpreter','latex', 'Location','southeast')
+xlim([new_time(1), new_time(end)])
+ylim([0, max(SIDTTHE_trends.H)*1.05])
+set(gca, 'TickLabelInterpreter', 'Latex')
+
+% E - data + NPIs
+figure(7)
+for ii = 1:length(policy_dates)-1
+    fill(area.x(ii, :) ,area.y_E(1, :), customColors2{ii,1} ,'FaceAlpha',.5,'EdgeColor', 'none','HandleVisibility', 'off')
+    hold on
+    xline(policy_dates(ii),":",'HandleVisibility', 'off')
+    hold on 
+end
+hold on
+plot(new_time, DataArray{7,:}, LineWidth =1.5, Color=matlabBlue)
+ylabel('$\char"0023$ of cases','Interpreter','latex')
+title('\textbf{Data - Deceased}','Interpreter','latex')
+legend('Real Data', 'ODE Simulated Data','Interpreter','latex', 'Location','southeast')
+xlim([new_time(1), new_time(end)])
+ylim([0, max(DataArray{7,:})*1.05])
+set(gca, 'TickLabelInterpreter', 'Latex')
+
+% V - data + NPIs
+figure(8)
+for ii = 1:length(policy_dates)-1
+    fill(area.x(ii, :) ,area.y_V(1, :), customColors2{ii,1} ,'FaceAlpha',.5,'EdgeColor', 'none','HandleVisibility', 'off')
+    hold on
+    xline(policy_dates(ii),":",'HandleVisibility', 'off')
+    hold on 
+end
+hold on
+plot(new_time, DataArray{8,:}, LineWidth =1.5, Color=matlabBlue)
+ylabel('$\char"0023$ of cases','Interpreter','latex')
+title('\textbf{Data - Vaccinated}','Interpreter','latex')
+legend('Real Data', 'ODE Simulated Data','Interpreter','latex', 'Location','southeast')
+xlim([new_time(1), new_time(end)])
+ylim([0, max(SIDTTHE_trends.V)*1.05])
+set(gca, 'TickLabelInterpreter', 'Latex')
 
 
 %% Variants and coefficients 

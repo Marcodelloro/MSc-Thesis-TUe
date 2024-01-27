@@ -287,6 +287,7 @@ f = @(X, coefs, q)            [ -X(1)*(coefs(1)*X(2) + coefs(2)*X(3));          
                              
 
 dt = 1;
+full_x = {};
 
 for k = 1:N-1 
 
@@ -298,7 +299,7 @@ for k = 1:N-1
    k4 = f(X(:,k)+dt*k3,   coefs(:,k));
    x_next = X(:,k) + dt/6*(k1+2*k2+2*k3+k4);
    opti.subject_to(X(:,k+1) == x_next); % close the gaps
-
+   full_x{end+1} = x_next;
 end
 
 

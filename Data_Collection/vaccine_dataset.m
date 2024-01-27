@@ -103,3 +103,5 @@ set(gca, 'TickLabelInterpreter', 'Latex')
 
 filename = 'vaxData.mat';
 save(filename, 'vaxData'); 
+
+filename2 = 'Filtered VaxData';
