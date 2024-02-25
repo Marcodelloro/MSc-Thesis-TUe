@@ -9,9 +9,8 @@
 clc
 clear all 
 close all
-
-dataset = readtable('/Users/marcodelloro/Desktop/Thesis/MSc-Thesis-TUe/Italy_complete_dataset.xlsx');
-variants_data = readtable('/Users/marcodelloro/Desktop/Thesis/MSc-Thesis-TUe/Italy_complete_dataset.xlsx', 'Sheet','Variants');
+dataset = readtable('/Users/marcodelloro/Desktop/Thesis/MSc-Thesis-TUe/Data_Collection/Italian Dataset/Italy_complete_dataset.xlsx');
+variants_data = readtable('/Users/marcodelloro/Desktop/Thesis/MSc-Thesis-TUe/Data_Collection/Italian Dataset/Italy_complete_dataset.xlsx', 'Sheet','Variants');
 variants_data = variants_data(1:1368,:);
 
 vax = load("vaxData.mat");
@@ -32,7 +31,6 @@ dec.data = csaps(xi,dataset.deceduti,p,xi);
 tests.data = csaps(xi,dataset.diff_tamponi,p,xi);
 
 ICU_cube = ICU.data;
-
 
 % Apply a Savitzky - Golay filter on the cubic data
 order = 5;
@@ -224,8 +222,8 @@ variants =  variants(1:57,:);
 
 %% Saving all data
 
-SIDTTHE_data = {infected_avg, 'Infected'; pos, 'Diagnosed'; hosp, 'Hospitalised'; ICU, 'ICU threatend'; dec, 'Deceased'; total_heal, 'Healed'};
-filename = 'SIDTTHE_data.mat';
+SIDTTHE_data = {infected_avg, 'Infected'; pos, 'Diagnosed'; hosp, 'Hospitalised'; ICU, 'ICU threatend'; dec, 'Deceased'; total_heal, 'HealedAug'; healed, 'Healed'};
+filename = 'SIDTTHE_data_DEF.mat';
 save(filename, 'SIDTTHE_data'); 
 
 % save of the data from Testing activities
@@ -413,7 +411,7 @@ plot(dec.date, vax.vaxData.sum_d2, LineWidth=1.5)
 hold on 
 plot(dec.date, vax.vaxData.sum_dpi, LineWidth=1.5)
 ylabel('$\char"0023$ of cases','Interpreter','latex')
-title('\textbf{Vaccined Population}','Interpreter','latex')
+title('\textbf{Vaccinated Population}','Interpreter','latex')
 grid on
 legend('$S$ Vaccines', '$H$ Vaccines','Interpreter','latex', 'Location','northwest')
 xlim([pos.date(1), pos.date(end)])

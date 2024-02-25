@@ -10,6 +10,7 @@ Pk_min = (eye(nstates)+A)*P*(eye(nstates)+A)' + L*Qp*L';
 % Computation of covariance and Kalman gain
 K = Pk_min*C'/(C*Pk_min*C' + R) ;
 Pk_plus = (eye(nstates)- K*C)*Pk_min;
+% Pk_plus =(Pk_min^-1 + C'*R^-1*C)^-1;
 
 % Computation of state estimate update
 Xk_plus = Xk_min + K*(Zmeas - C*Xk_min);

@@ -390,9 +390,9 @@ set(gca, 'TickLabelInterpreter', 'Latex')
 
 %% Saving all data
 
-DataStructAUS.Filterd.Vax = Vax_Data.people_fully_vaccinated;
 
-SIDTTHE_AUS = {infected_avg, 'Infected'; DataStructAUS.Filterd.ActiveCases, 'Diagnosed'; DataStructAUS.Filterd.Hospitalised, 'Hospitalised'; DataStructAUS.Filterd.ICUs, 'ICU threatend'; DataStructAUS.Filterd.Deaths, 'Deceased'; total_heal.data, 'HealedAug'; DataStructAUS.Filterd.Hospitalised, 'Healed'};
+
+SIDTTHE_AUS = {infected_avg, 'Infected'; DataStructAUS.Filterd.ActiveCases, 'Diagnosed'; DataStructAUS.Filterd.Hospitalised, 'Hospitalised'; DataStructAUS.Filterd.ICUs, 'ICU threatend'; DataStructAUS.Filterd.Deaths, 'Deceased'; total_heal, 'HealedAug'; DataStructAUS.Filterd.Hospitalised, 'Healed'};
 filename = 'SIDTTHE_AUS.mat';
 save(filename, 'SIDTTHE_AUS');
 

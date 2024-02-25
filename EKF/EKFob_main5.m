@@ -54,7 +54,6 @@ dSigma2 = 0;
 dTau1 = 0;
 dTau2 = 0;
 
-
 % vetors for the computation - This Select what you want to compute
 
 eqns = [dS; dI; dD; dT1; dT2; dH; dE; dDelta1; dDelta1; dSigma1; dSigma2; dTau1; dTau2];
