@@ -13,35 +13,34 @@ from pmdarima import auto_arima
 from statsmodels.tsa.arima.model import ARIMA
 from statsmodels.tsa.stattools import adfuller
 
-params = pd.read_csv('table_par2.csv')
+params = pd.read_csv('table_parAUS.csv')
 params_to_forecast = ['alpha', 'gamma', 'delta', 'sigma', 'tau']
 df = params[['alpha', 'gamma', 'delta', 'sigma', 'tau']]
 weeksIn = [0, 7, 14, 21, 28, 35]
 days_ahead = 21   # Estimation horizon (3 weeks)
-# horizon = 4 * days_ahead # --> 'Forecasts21d_CI2.xlsx'
-horizon = 10 * days_ahead # --> 'Forecasts21d_CI3.xlsx'
-# horizon = 7 * days_ahead # --> 'Forecasts21d_CI4.xlsx'
+# horizon = 4 * days_ahead # --> 'ForecastsAUS_CI.xlsx'
+# horizon = 8 * days_ahead # --> 'ForecastsAUS_CI2.xlsx'
+horizon = 10 * days_ahead # --> 'ForecastsAUS_CI3.xlsx'
 
-with pd.ExcelWriter('Forecasts21d_CI3.xlsx', engine='xlsxwriter') as writer:
+with pd.ExcelWriter('ForecastsAUS_CI.xlsx', engine='xlsxwriter') as writer:
     for k in range(len(weeksIn)):
         df_sub = df.iloc[0:horizon + weeksIn[k]]
         forecasts = pd.DataFrame(index=np.arange(days_ahead))  # Creating an empty DataFrame with the right index
 
-        # Variables for Prophet estimation
         date_range_prophet = pd.date_range(start=df_sub.index[-35], periods=35, freq='D')
         combined_forecast = pd.DataFrame()
         last_values = {}
 
         for param in params_to_forecast:
-            train_holt = df_sub[param]  # Training data for the current parameter
+            train_holt = df_sub[param][-35:]  # Training data for the current parameter
             test_holt = df[param][horizon:horizon + weeksIn[k] + days_ahead]
             last_value_holt = train_holt.iloc[-1]
             hwmodel_damped = ExponentialSmoothing(train_holt, trend='mul', damped_trend=True, seasonal=None).fit(smoothing_trend=0.5)
             test_pred = hwmodel_damped.forecast(days_ahead)
             num_simulations = 1000
             simulated_paths = hwmodel_damped.simulate(nsimulations=days_ahead, repetitions=num_simulations, error='mul')
-            lower_quantiles = np.percentile(simulated_paths, 2.5, axis=1)
-            upper_quantiles = np.percentile(simulated_paths, 97.5, axis=1)
+            lower_quantiles = np.percentile(simulated_paths, 10, axis=1)
+            upper_quantiles = np.percentile(simulated_paths, 90, axis=1)
 
             test_pred_reset_index = test_pred.reset_index(drop=True)
 

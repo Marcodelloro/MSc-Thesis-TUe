@@ -16,7 +16,6 @@ newpos = readtable('/Users/marcodelloro/Desktop/Thesis/MSc-Thesis-TUe/Data_Colle
 dataAUS.Hospitalised = hospAUS.AUS;
 dataAUS.ICUs = icuAUS.AUS;
 
-
 values = newpos.NewCases_Day;
 dates2 = datetime('25-Jan-2020', 'InputFormat', 'dd-MMM-yyyy'):days(1):datetime('04-Aug-2023', 'InputFormat', 'dd-MMM-yyyy');
 newpos = table(dates2', values, 'VariableNames', {'Date', 'NewPos'});
@@ -156,7 +155,7 @@ end
 
 % Double - Dosed Vaccines in Australia https://covidbaseau.com/
 figure(45)
-plot(Vax_Data.date, Vax_Data.people_fully_vaccinated, LineWidth=1.5)
+plot(Vax_Data.date, Vax_Data.people_fully_vaccinated, LineWidth=2)
 ylabel('$\char"0023$ of cases', 'Interpreter', 'latex')
 title('\textbf{Vaccinated Population}', 'Interpreter', 'latex')
 grid on
@@ -167,7 +166,7 @@ set(gca, 'TickLabelInterpreter', 'Latex')
 
 figure("Units","centimeters","Position",[0,0,30,40])
 subplot(3,2,1)
-plot(dataAUS.Date, dataAUS.ActiveCases, LineWidth=1.5)
+plot(dataAUS.Date, dataAUS.ActiveCases, LineWidth=2)
 ylabel('$\char"0023$ of cases', 'Interpreter', 'latex')
 title('\textbf{Positive - Detected Population}', 'Interpreter', 'latex')
 grid on
@@ -175,7 +174,7 @@ xlim([dataAUS.Date(1), dataAUS.Date(end)])
 set(gca, 'TickLabelInterpreter', 'Latex')
 
 subplot(3,2,2)
-plot(dataAUS.Date, dataAUS.Hospitalised, LineWidth=1.5)
+plot(dataAUS.Date, dataAUS.Hospitalised, LineWidth=2)
 ylabel('$\char"0023$ of cases', 'Interpreter', 'latex')
 title('\textbf{Hospitalised Population}', 'Interpreter', 'latex')
 grid on
@@ -183,7 +182,7 @@ xlim([dataAUS.Date(1), dataAUS.Date(end)])
 set(gca, 'TickLabelInterpreter', 'Latex')
 
 subplot(3,2,3)
-plot(dataAUS.Date, dataAUS.ICUs, LineWidth=1.5)
+plot(dataAUS.Date, dataAUS.ICUs, LineWidth=2)
 ylabel('$\char"0023$ of cases', 'Interpreter', 'latex')
 title('\textbf{Intensive Care Population}', 'Interpreter', 'latex')
 grid on
@@ -191,7 +190,7 @@ xlim([dataAUS.Date(1), dataAUS.Date(end)])
 set(gca, 'TickLabelInterpreter', 'Latex')
 
 subplot(3,2,4);
-plot(dataAUS.Date, dataAUS.Recoveries, LineWidth=1.5)
+plot(dataAUS.Date, dataAUS.Recoveries, LineWidth=2)
 ylabel('$\char"0023$ of cases', 'Interpreter', 'latex')
 title('\textbf{Healed Population}', 'Interpreter', 'latex')
 grid on
@@ -199,7 +198,7 @@ xlim([dataAUS.Date(1), dataAUS.Date(end)])
 set(gca, 'TickLabelInterpreter', 'Latex')
 
 subplot(3,2,5);
-plot(dataAUS.Date, dataAUS.Deaths, LineWidth=1.5)
+plot(dataAUS.Date, dataAUS.Deaths, LineWidth=2)
 ylabel('$\char"0023$ of cases', 'Interpreter', 'latex')
 title('\textbf{Deceased Population}', 'Interpreter', 'latex')
 grid on
@@ -207,13 +206,13 @@ xlim([dataAUS.Date(1), dataAUS.Date(end)])
 set(gca, 'TickLabelInterpreter', 'Latex')
 
 subplot(3,2,6);
-plot(Vax_Data.date, Vax_Data.people_fully_vaccinated, LineWidth=1.5)
+plot(Vax_Data.date, Vax_Data.people_fully_vaccinated, LineWidth=2)
 ylabel('$\char"0023$ of cases','Interpreter','latex')
 title('\textbf{Vaccinated Population}','Interpreter','latex')
 grid on
 xlim([dataAUS.Date(1), dataAUS.Date(end)])
 set(gca, 'TickLabelInterpreter', 'Latex')
-sgtitle('\textbf{Raw Available Data}','Interpreter','latex');
+% sgtitle('\textbf{Raw Available Data}','Interpreter','latex');
 
 
 %% Estimate of the total number of infected, undetected (Not tested)
@@ -274,6 +273,16 @@ for ii = 2:size(delta_N,1)
 
 end
 
+
+figure(34)
+scatter(DataStructAUS.Raw.Date, H,40 ,"filled",'MarkerFaceColor',[0.8500 0.3250 0.0980])
+ylabel('$\textit{$\Delta$I}$', 'Interpreter', 'latex');
+% title('$\textbf{New Undetected cases per day}$', 'Interpreter', 'latex');
+xlim([DataStructAUS.Raw.Date(1) DataStructAUS.Raw.Date(end)])
+ylim([0 1e5])
+set(gca, 'TickLabelInterpreter', 'Latex')
+grid on
+box on
 %% fixing numerical errors in Hplus/Hminus
 H_plus(69) = H_plus(70);
 H_plus(82) = H_plus(83);
@@ -307,17 +316,27 @@ dark_minus_avg.data = sgolayfilt(dark_minus_avg.data,order2,framelen);
 delta_N_avg.data = sgolayfilt(delta_N_avg.data,order2,framelen);
 
 
-% Following the 'Linear Correlation approach' i calculate the ODE for infected
+% Following the 'Linear Correlation approach'
 ratio_observed = (dark_avg.data + delta_N_avg.data) ./ delta_N_avg.data;
-ratio_undetected = dark_minus_avg.data ./ delta_N_avg.data;
+ratio_undetected = dark_avg.data ./ delta_N_avg.data;
+ratio_undetected2 = dark_minus_avg.data ./ delta_N_avg.data;
+ratioPlus = dark_plus_avg.data./ delta_N_avg.data;
+ratioMinus = dark_minus_avg.data./ delta_N_avg.data;
 
 infected_avg = DataStructAUS.Filterd.ActiveCases .* ratio_undetected';
-
+infected_avg_plus = DataStructAUS.Filterd.ActiveCases .* ratioPlus'*1.05;
+infected_avg_minus = DataStructAUS.Filterd.ActiveCases .* ratioMinus'*0.95;
+% 
+% infected_avg_plus(212:246) = infected_avg(212:246)*1.2;
+% infected_avg_minus(1:160) = infected_avg(1:160)*0.5;
 figure(11)
 scatter(dataAUS.Date, dark_avg.data, 'filled')
 ylabel('$\textit{$\Delta$H}$', 'Interpreter', 'latex');
-title('\textbf{Filtered \textit{New Undetected cases per day}}', 'Interpreter', 'latex');
+yax = ylabel('\textbf{$\mathbf{\char"0023}$ of cases}','Interpreter','latex');
+yax.FontSize = 14;
+% title('\textbf{Filtered \textit{New Undetected cases per day}}', 'Interpreter', 'latex');
 xlim([dataAUS.Date(1), dataAUS.Date(end)])
+set(gca, 'TickLabelInterpreter', 'Latex')
 grid on
 
 % We are going to assume a ratio also between people that are healed and
@@ -337,40 +356,53 @@ total_heal.data = csaps(xi,total_heal.data,p,xi);
 total_heal.data = sgolayfilt(total_heal.data,order,framelen);
 
 figure(12)
-plot(dataAUS.Date, total_heal.data, LineWidth=1.5)
-hold on 
-plot(dataAUS.Date, DataStructAUS.Filterd.Recoveries, LineWidth=1.5)
+plot(dataAUS.Date, DataStructAUS.Filterd.Recoveries, LineWidth=2)
+hold on
+plot(dataAUS.Date, total_heal.data, LineWidth=2)
 ylabel('$\char"0023$ of cases', 'Interpreter', 'latex')
-title('\textbf{Observed vs Total Healed Population}', 'Interpreter', 'latex')
+% title('\textbf{Observed vs Total Healed Population}', 'Interpreter', 'latex')
 grid on
-legend('Total', 'Observed','Interpreter', 'latex','location','southeast')
-xlim([dataAUS.Date(1), dataAUS.Date(end)])
+% lgd = legend('Estimated Total', 'Observed','Interpreter', 'latex','location','southeast');
+% lgd.FontSize = 18;
+yax = ylabel('$\mathbf{\char"0023}$ of cases','Interpreter','latex');
+% yax.FontSize = 14;
 set(gca, 'TickLabelInterpreter', 'Latex')
+xlim([dataAUS.Date(1), dataAUS.Date(end)])
+box on
 
 
 % "I" Undetected infected, estimated model
 
 var_area.x = [dataAUS.Date; flip(dataAUS.Date)];
 var_area.y = [dark_plus_avg.data'; flip(dark_minus_avg.data')];
+var_area.Ivar = [infected_avg_plus; flip(infected_avg_minus)];
 
 figure(13)
-plot(dataAUS.Date, dark_avg.data, LineWidth=1.5, Color=[0 0.4470 0.7410])
+plot(dataAUS.Date, dark_avg.data, LineWidth=2, Color=[0.8500 0.3250 0.0980])
 hold on
-fill(var_area.x,var_area.y,[0 0.4470 0.7410],'FaceAlpha',.3,'EdgeColor','none')
-ylabel('$\char"0023$ of cases','Interpreter','latex')
-title('\textbf{Estimated Hidden Cases per day}','Interpreter','latex')
+fill(var_area.x,var_area.y,[0.8500 0.3250 0.0980],'FaceAlpha',.3,'EdgeColor','none')
+hold on
+yax = ylabel('$\mathbf{\char"0023}$ of cases','Interpreter','latex');
+% yax.FontSize = 14;
+% title('\textbf{Estimated Hidden Cases per day}','Interpreter','latex')
 grid on
-legend('Hidden Cases','95 \% Confidence Interval','Interpreter','latex','Location','northeast')
+lgd = legend('Hidden Cases','95 \% Confidence Interval','Interpreter','latex','Location','northeast');
+% lgd.FontSize = 18;
 xlim([dataAUS.Date(1), dataAUS.Date(end)])
 set(gca, 'TickLabelInterpreter', 'Latex')
+box on
+
+save('Var_InfectedAUS.mat', 'var_area');
 
 % Ratio between "ESTIMATED TOTAL INFECTED / DETECTED INFECTED" - Trend
 
 figure(14)
-plot(dataAUS.Date, ratio_undetected, LineWidth=1.5, Color=[0 0.4470 0.7410])
-title('\textbf{Ratio $\zeta$ Undetected - Detected Infections }','Interpreter','latex')
+plot(dataAUS.Date, ratio_undetected, LineWidth=2, Color=[0.8500 0.3250 0.0980])
+% title('\textbf{Ratio $\zeta$ Undetected - Detected Infections }','Interpreter','latex')
 grid on
-legend('$\zeta$','Interpreter','latex')
+% legend('$\zeta$','Interpreter','latex')
+yax = ylabel('Ratio Level','Interpreter','latex');
+% yax.FontSize = 14;
 xlim([dataAUS.Date(1), dataAUS.Date(end)])
 set(gca, 'TickLabelInterpreter', 'Latex')
 
@@ -378,13 +410,14 @@ set(gca, 'TickLabelInterpreter', 'Latex')
 % Actual I group
 
 figure(20)
-plot(dataAUS.Date, DataStructAUS.Filterd.ActiveCases, LineWidth=1.5, Color=[0 0.4470 0.7410])
+plot(dataAUS.Date, DataStructAUS.Filterd.ActiveCases./ratio_undetected2', LineWidth=1.5, LineStyle="--",Color=[0 0 0])
 hold on
 plot(dataAUS.Date, infected_avg, LineWidth=1.5)
+hold on
+fill(var_area.x,var_area.Ivar,[0.8500 0.3250 0.0980],'FaceAlpha',.2,'EdgeColor','none')
 ylabel('$\char"0023$ of cases','Interpreter','latex')
-title('\textbf{Comparison Dark Data - Real Data}','Interpreter','latex')
 grid on
-legend('Real Data - Diagnosed', 'Dark Data - Undetected','Interpreter','latex')
+legend('Real Data - Diagnosed', 'Dark Data - Undetected','95\% Confidence Interval','Interpreter','latex')
 xlim([dataAUS.Date(1), dataAUS.Date(end)])
 set(gca, 'TickLabelInterpreter', 'Latex')
 
@@ -392,9 +425,62 @@ set(gca, 'TickLabelInterpreter', 'Latex')
 
 DataStructAUS.Filterd.Vax = Vax_Data.people_fully_vaccinated;
 
-SIDTTHE_AUS = {infected_avg, 'Infected'; DataStructAUS.Filterd.ActiveCases, 'Diagnosed'; DataStructAUS.Filterd.Hospitalised, 'Hospitalised'; DataStructAUS.Filterd.ICUs, 'ICU threatend'; DataStructAUS.Filterd.Deaths, 'Deceased'; total_heal.data, 'HealedAug'; DataStructAUS.Filterd.Hospitalised, 'Healed'};
+SIDTTHE_AUS = {infected_avg, 'Infected'; DataStructAUS.Filterd.ActiveCases, 'Diagnosed'; DataStructAUS.Filterd.Hospitalised, 'Hospitalised'; DataStructAUS.Filterd.ICUs, 'ICU threatend'; DataStructAUS.Filterd.Deaths, 'Deceased'; total_heal.data, 'HealedAug'; DataStructAUS.Filterd.Recoveries, 'Healed'};
 filename = 'SIDTTHE_AUS.mat';
 save(filename, 'SIDTTHE_AUS');
 
 filename2 = 'DataStructAUS.mat';
 save(filename2, 'DataStructAUS');
+
+%% Australian Variants
+
+variants = readtable('/Users/marcodelloro/Desktop/Thesis/MSc-Thesis-TUe/Data_Collection/Australian Dataset/variantsAUS 2.xlsx');
+
+customColors = {[0,	0.447,	0.741],
+                [0.85,	0.325,	0.098],
+                [0.929,	0.694,	0.125],
+                [0.494,	0.184,	0.556],
+                [0.466,	0.674,	0.188],
+                [0.301,	0.745,	0.933],
+                [0.635,	0.078,	0.184],
+                [0 0 1],            
+                [1 0 0],              
+                [1 1 0], 
+                [0.1 0.1 0.1],
+                [0 1 0.5]
+                };
+
+
+% modifiy data for the plot
+data_barplot = removevars(variants,'Var1');
+data_barplot(:, 11:18) = []; % in oder to have less variants (not interesting)
+data_barplot = table2array(data_barplot)*100;
+date_barplot = variants.Var1;
+
+figure()
+h = bar(date_barplot, data_barplot, 0.90, "stacked");
+for ii = 1:size(customColors, 1)
+    set(h(1, ii), 'facecolor', customColors{ii, 1})
+end
+ylabel('$\%$ Variant', 'Interpreter', 'latex')
+legend('B.1.1.7 - ALPHA VARIANT', 'B.1.351 - BETA VARIANT', 'P.1 - GAMMA VARIANT', 'B.1.617.2 - DELTA VARIANT', ...
+       'BA.1 - OMICRON BA.1', 'BA.2 - OMICRON BA.2', 'BA.2.12.1', 'BA.4 - OMICRON BA.4', 'BA.5 - OMICRON BA.5', 'BQ.1', ...
+       'BA.2.86', 'Others',...
+       'Interpreter', 'latex', 'Location', 'southoutside', 'NumColumns', 3)
+xlim([variants.Var1(1)-5, variants.Var1(end)+5])
+ylim([0, 100])
+set(gca, 'TickLabelInterpreter', 'Latex')
+
+% Smoothing of Most importat variants to have a "Variants Plot"
+
+xii = [0:1:29];
+p=1;
+
+SmoothVar.date = variants.Var1;
+SmoothVar.alpha = csaps(xii,variants.("delta"),p,xii);
+SmoothVar.omi_BA1 = csaps(xii,variants.("omicron_BA_1_"),p,xii);
+SmoothVar.omi_BA2 = csaps(xii,variants.("omicron_BA_2_"),p,xii);
+SmoothVar.omi_BA4 = csaps(xii,variants.("omicron_BA_4_"),p,xii);
+SmoothVar.omi_BA5 = csaps(xii,variants.("Omicron_BA_5_"),p,xii);
+
+save('SmoothVariantasAus.mat','SmoothVar');

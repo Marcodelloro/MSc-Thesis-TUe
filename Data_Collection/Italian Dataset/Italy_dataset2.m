@@ -52,27 +52,27 @@ pos.date = t1:caldays(1):t2;
 healed.date = t1:caldays(1):t2;
 dec.date = t1:caldays(1):t2;
 
-
-% figure()
-% plot(dataset.data, dataset.terapia_intensiva, LineWidth=1.5)
-% hold on 
-% plot(pos.date, ICU_cube, LineWidth=1.5)
-% hold on 
-% plot(pos.date, ICU.data, LineWidth=1.5)
-% ylabel('$\char"0023$ of cases', 'Interpreter', 'latex')
+indexOfInterest = 110:170;
+figure()
+plot(dataset.data, dataset.terapia_intensiva, LineWidth=2)
+hold on 
+plot(pos.date, ICU_cube, LineWidth=2)
+hold on 
+plot(pos.date, ICU.data, LineWidth=2)
+ylabel('$\char"0023$ of cases', 'Interpreter', 'latex')
 % title('\textbf{Intensive Care Units}', 'Interpreter', 'latex')
-% grid on
-% legend('Raw', 'Cubic Spline','S-G Filter','Interpreter', 'latex')
-% xlim([pos.date(1), pos.date(end)])
-% set(gca, 'TickLabelInterpreter', 'Latex')
-% insetAx = axes('position', [.35 .175 .25 .25]);
-% plot(insetAx, pos.date(indexOfInterest), dataset.terapia_intensiva(indexOfInterest), 'LineWidth', 2)
-% hold on
-% plot(insetAx, pos.date(indexOfInterest), ICU_cube(indexOfInterest), 'LineWidth', 2)
-% hold on
-% plot(insetAx, pos.date(indexOfInterest), ICU.data(indexOfInterest), 'LineWidth', 2)
-% axis tight
-% set(insetAx, 'XTick', [], 'YTick', []);  % Remove ticks
+grid on
+legend('Raw', 'Cubic Spline','S-G Filter','Interpreter', 'latex')
+xlim([pos.date(1), pos.date(end)])
+set(gca, 'TickLabelInterpreter', 'Latex')
+insetAx = axes('position', [.35 .175 .25 .25]);
+plot(insetAx, pos.date(indexOfInterest), dataset.terapia_intensiva(indexOfInterest), 'LineWidth', 2)
+hold on
+plot(insetAx, pos.date(indexOfInterest), ICU_cube(indexOfInterest), 'LineWidth', 2)
+hold on
+plot(insetAx, pos.date(indexOfInterest), ICU.data(indexOfInterest), 'LineWidth', 2)
+axis tight
+set(insetAx, 'XTick', [], 'YTick', []);  % Remove ticks
 
 %% Estimate of the total number of infected, undetected (Not tested)
 
@@ -125,8 +125,8 @@ for ii = 2:size(delta_N,1)
                ( 4 * delta_N(ii)^3 ) / (den_H^2) + ...
                ( delta_N(ii)^2 ) / (den_H);
 
-    H_plus(ii) = H(ii) + 1.96*sqrt(varH(ii)); % 99perc confidence interval
-    H_minus(ii) = H(ii) - 1.96*sqrt(varH(ii));
+    H_plus(ii) = H(ii) + 3.96*sqrt(varH(ii)); % 99perc confidence interval
+    H_minus(ii) = H(ii) - 3.96*sqrt(varH(ii));
 
 end
 
@@ -136,11 +136,16 @@ H_plus(1) = H(1) + 1.96*sqrt(varH(1)); % 99perc confidence interval
 H_minus(1) = H(1) - 1.96*sqrt(varH(1)); 
 
 figure(34)
-plot(dataset.data, H)
+scatter(dataset.data, H,40 ,"filled")
 ylabel('$\textit{$\Delta$I}$', 'Interpreter', 'latex');
-title('$\textbf{New Undetected cases per day}$', 'Interpreter', 'latex');
+% title('$\textbf{New Undetected cases per day}$', 'Interpreter', 'latex');
 xlim([dataset.data(1) dataset.data(end)])
+ylim([min(H) 10e4])
+set(gca, 'TickLabelInterpreter', 'Latex')
+yLimits = ylim;
+yticks(0:2e4:10e4);
 grid on
+box on
 
 % Filtering "Dark Number Data" cubic spline + SGF - Hidden cases per week 
 order2 = 3;
@@ -159,14 +164,20 @@ delta_N_avg.data = sgolayfilt(delta_N_avg.data,order2,framelen);
 ratio_observed = (dark_avg.data + delta_N_avg.data) ./ delta_N_avg.data;
 ratio_undetected = dark_avg.data ./ delta_N_avg.data;
 
+ratioPlus = dark_plus_avg.data./ delta_N_avg.data;
+ratioMinus = dark_minus_avg.data./ delta_N_avg.data;
+
 infected_avg.date = pos.date;
 infected_avg.data = pos.data .* ratio_undetected;
+infected_avg_plus = pos.data .* ratioPlus;
+infected_avg_minus = pos.data .* ratioMinus;
 
 figure()
 scatter(dataset.data, dark_avg.data, 'filled')
 ylabel('$\textit{$\Delta$H}$', 'Interpreter', 'latex');
 title('$\textbf{Filtered \textit{New Undetected cases per day}$', 'Interpreter', 'latex');
 xlim([dataset.data(1) dataset.data(end)])
+set(gca, 'TickLabelInterpreter', 'Latex')
 grid on
 
 % We are going to assume a ratio also between people that are healed and
@@ -301,25 +312,30 @@ set(gca, 'TickLabelInterpreter', 'Latex')
 
 var_area.x = [pos.date flip(pos.date)];
 var_area.y = [dark_plus_avg.data'; flip(dark_minus_avg.data')];
+var_area.Ivar = [infected_avg_plus'; flip(infected_avg_minus')];
 
 figure()
-plot(pos.date, dark_avg.data, LineWidth=1.5, Color=[0 0.4470 0.7410])
+plot(pos.date, dark_avg.data, LineWidth=2, Color=[0 0.4470 0.7410])
 hold on
 fill(var_area.x,var_area.y,[0 0.4470 0.7410],'FaceAlpha',.3,'EdgeColor','none')
 ylabel('$\char"0023$ of cases','Interpreter','latex')
-title('\textbf{Estimated Hidden Cases per day}','Interpreter','latex')
+% title('\textbf{Estimated Hidden Cases per day}','Interpreter','latex')
 grid on
 legend('Hidden Cases','95 \% Confidence Interval','Interpreter','latex','Location','northeast')
 xlim([pos.date(1), pos.date(end)])
 set(gca, 'TickLabelInterpreter', 'Latex')
+box on
+
+save('Var_Infected.mat', 'var_area');
 
 % Ratio between "ESTIMATED TOTAL INFECTED / DETECTED INFECTED" - Trend
 
 figure()
-plot(pos.date, ratio_undetected, LineWidth=1.5, Color=[0 0.4470 0.7410])
-title('\textbf{Ratio $\zeta$ Undetected - Detected Infections }','Interpreter','latex')
+plot(pos.date, ratio_undetected, LineWidth=2, Color=[0 0.4470 0.7410])
+% title('\textbf{Ratio $\zeta$ Undetected - Detected Infections }','Interpreter','latex')
 grid on
-legend('$\zeta$','Interpreter','latex')
+yax = ylabel('{Ratio Level}','Interpreter','latex');
+% legend('$\zeta$','Interpreter','latex')
 xlim([pos.date(1), pos.date(end)])
 set(gca, 'TickLabelInterpreter', 'Latex')
 
@@ -339,25 +355,28 @@ set(gca, 'TickLabelInterpreter', 'Latex')
 
 % Plot comparison between detected/diagnosed and infected population
 
-figure()
-plot(pos.date, pos.data, LineWidth=1.5, Color=[0 0.4470 0.7410])
+figure(30)
+plot(pos.date, pos.data,LineWidth=1.5, LineStyle="--",Color=[0 0 0])
 hold on
-plot(pos.date, infected_avg.data, LineWidth=1.5)
+plot(pos.date, infected_avg.data, Color=[0 0.4470 0.7410], LineWidth=1.5)
+colorsct=[0 0.4470 0.7410];
+hold on 
+fill(var_area.x,var_area.Ivar, colorsct, 'FaceAlpha', .2, 'EdgeColor', 'none');
 ylabel('$\char"0023$ of cases','Interpreter','latex')
-title('\textbf{Comparison Dark Data - Real Data}','Interpreter','latex')
 grid on
-legend('Real Data - Diagnosed', 'Dark Data - Undetected','Interpreter','latex')
-xlim([pos.date(1), pos.date(end)])
+legend('Real Data - Diagnosed', 'Dark Data - Undetected','95\% Confidence Interval','Interpreter','latex')
 set(gca, 'TickLabelInterpreter', 'Latex')
+xlim([pos.date(1), pos.date(end)])
+box on
 
 % Plot comparison between healed and "new healed" (based on assumed calculation)
 
 figure()
-plot(healed.date, healed.data, LineWidth=1.5, Color=[0 0.4470 0.7410])
+plot(healed.date, healed.data, LineWidth=2, Color=[0 0.4470 0.7410])
 hold on
-plot(healed.date, total_heal.data, LineWidth=1.5)
+plot(healed.date, total_heal.data, LineWidth=2)
 ylabel('$\char"0023$ of cases','Interpreter','latex')
-title('\textbf{Observed vs Total Healed population}','Interpreter','latex')
+% title('\textbf{Observed vs Total Healed population}','Interpreter','latex')
 grid on
 legend('Observed Healed', 'Total Healed','Interpreter','latex', 'Location','southeast')
 xlim([pos.date(1), pos.date(end)])
@@ -367,7 +386,7 @@ set(gca, 'TickLabelInterpreter', 'Latex')
 
 figure("Units","centimeters","Position",[0,0,30,40])
 subplot(3,2,1)
-plot(dataset.data, dataset.isolamento_domiciliare, LineWidth=1.5)
+plot(dataset.data, dataset.isolamento_domiciliare, LineWidth=2)
 ylabel('$\char"0023$ of cases', 'Interpreter', 'latex')
 title('\textbf{Positive - Detected Population}', 'Interpreter', 'latex')
 grid on
@@ -375,7 +394,7 @@ xlim([pos.date(1), pos.date(end)])
 set(gca, 'TickLabelInterpreter', 'Latex')
 
 subplot(3,2,2)
-plot(dataset.data, dataset.ricoverati, LineWidth=1.5)
+plot(dataset.data, dataset.ricoverati, LineWidth=2)
 ylabel('$\char"0023$ of cases', 'Interpreter', 'latex')
 title('\textbf{Hospitalised Population}', 'Interpreter', 'latex')
 grid on
@@ -383,7 +402,7 @@ xlim([pos.date(1), pos.date(end)])
 set(gca, 'TickLabelInterpreter', 'Latex')
 
 subplot(3,2,3)
-plot(dataset.data, dataset.terapia_intensiva, LineWidth=1.5)
+plot(dataset.data, dataset.terapia_intensiva, LineWidth=2)
 ylabel('$\char"0023$ of cases', 'Interpreter', 'latex')
 title('\textbf{Intensive Care Population}', 'Interpreter', 'latex')
 grid on
@@ -391,7 +410,7 @@ xlim([pos.date(1), pos.date(end)])
 set(gca, 'TickLabelInterpreter', 'Latex')
 
 subplot(3,2,4);
-plot(dataset.data, dataset.guariti, LineWidth=1.5)
+plot(dataset.data, dataset.guariti, LineWidth=2)
 ylabel('$\char"0023$ of cases', 'Interpreter', 'latex')
 title('\textbf{Healed Population}', 'Interpreter', 'latex')
 grid on
@@ -399,7 +418,7 @@ xlim([pos.date(1), pos.date(end)])
 set(gca, 'TickLabelInterpreter', 'Latex')
 
 subplot(3,2,5);
-plot(dataset.data, dataset.deceduti, LineWidth=1.5)
+plot(dataset.data, dataset.deceduti, LineWidth=2)
 ylabel('$\char"0023$ of cases', 'Interpreter', 'latex')
 title('\textbf{Deceased Population}', 'Interpreter', 'latex')
 grid on
@@ -407,7 +426,7 @@ xlim([pos.date(1), pos.date(end)])
 set(gca, 'TickLabelInterpreter', 'Latex')
 
 subplot(3,2,6);
-plot(dec.date, vax.vaxData.sum_d2, LineWidth=1.5)
+plot(dec.date, vax.vaxData.sum_d2, LineWidth=2)
 hold on 
 plot(dec.date, vax.vaxData.sum_dpi, LineWidth=1.5)
 ylabel('$\char"0023$ of cases','Interpreter','latex')
@@ -416,7 +435,7 @@ grid on
 legend('$S$ Vaccines', '$H$ Vaccines','Interpreter','latex', 'Location','northwest')
 xlim([pos.date(1), pos.date(end)])
 set(gca, 'TickLabelInterpreter', 'Latex')
-sgtitle('\textbf{Raw Available Data}','Interpreter','latex');
+% sgtitle('\textbf{Raw Available Data}','Interpreter','latex');
 
 
 %% Comparison plots between coefficients and other interesting parameters
@@ -461,15 +480,18 @@ data_barplot = table2array(data_barplot);
 date_barplot = variants.date;
 
 figure()
-h = bar(date_barplot,data_barplot,0.8, "stacked");
+h = bar(date_barplot, data_barplot, 0.8, "stacked");
 for ii = 1:size(customColors, 1)
-    set(h(1, ii),'facecolor',customColors{ii,1})
+    set(h(1, ii), 'facecolor', customColors{ii, 1})
 end
-ylabel('$\%$ Variant','Interpreter','latex')
-title('\textbf{SARS-CoV-2 Variants in The Netherlands}','Interpreter','latex')
-legend('SARS-CoV-2', 'B.1.351', ' B.1.617.2 - DELTA VARIANT', 'B.1.1.7 - ALPHA VARIANT', 'B.1.427/B.1.429', 'B.1.525', 'B.1.620', 'B.1.621', 'BA.1 - OMICRON BA1 VARIANT', 'BA.2 - OMICRON BA2 VARIANT', 'C.37', 'P.1 - GAMMA VARIANT', 'Interpreter','latex','Location','northeastoutside')
+ylabel('$\%$ Variant', 'Interpreter', 'latex')
+legend('SARS-CoV-2', 'B.1.351', 'B.1.617.2 - DELTA VARIANT', ...
+    'B.1.1.7 - ALPHA VARIANT', 'B.1.427/B.1.429', 'B.1.525', ...
+    'B.1.620', 'B.1.621', 'BA.1 - OMICRON BA1 VARIANT', ...
+    'BA.2 - OMICRON BA2 VARIANT', 'C.37', 'P.1 - GAMMA VARIANT', ...
+    'Interpreter', 'latex', 'Location', 'southoutside', 'NumColumns', 3)
 xlim([variants.date(1), variants.date(end)])
-ylim([0,100.1])
+ylim([0, 100.1])
 set(gca, 'TickLabelInterpreter', 'Latex')
 
 % Smoothing of Most importat variants to have a "Variants Plot"
@@ -483,6 +505,9 @@ SmoothVar.SC2 = csaps(xii,variants.Other,p,xii);
 SmoothVar.alpha = csaps(xii,variants.("B.1.1.7"),p,xii);
 SmoothVar.gamma = csaps(xii,variants.("P.1"),p,xii);
 SmoothVar.delta = csaps(xii,variants.("B.1.617.2"),p,xii);
+
+
+save('SmoothVariantasIta.mat','SmoothVar');
 
 %% avg OBS/TOT ratio
 
